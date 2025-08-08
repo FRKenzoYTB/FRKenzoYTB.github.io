@@ -1,152 +1,48 @@
+<!-- login.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Connexion - TitiCraft</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
-  body {
-    margin: 0; 
-    background: #121212;
-    color: #eee;
-    font-family: 'Poppins', sans-serif;
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh;
-  }
-  .container {
-    background: #1f1f1f;
-    padding: 40px 50px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px #0af;
-    width: 350px;
-    position: relative;
-  }
-  h1 {
-    margin-bottom: 30px;
-    font-weight: 700;
-    text-align: center;
-    color: #0af;
-  }
-  label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #9acfff;
-  }
-  input[type="email"], input[type="password"] {
-    width: 100%;
-    padding: 10px 15px;
-    margin-bottom: 25px;
-    border-radius: 6px;
-    border: none;
-    background: #333;
-    color: #eee;
-    font-size: 15px;
-    outline: none;
-    transition: background 0.3s;
-  }
-  input[type="email"]:focus, input[type="password"]:focus {
-    background: #2a2a2a;
-  }
-  button {
-    width: 100%;
-    padding: 12px 0;
-    background: #0af;
-    border: none;
-    border-radius: 8px;
-    color: #121212;
-    font-weight: 700;
-    font-size: 17px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  button:hover {
-    background: #07a;
-  }
-  .help-circle {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: #0af;
-    color: #121212;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    font-weight: 700;
-    font-size: 22px;
-    text-align: center;
-    line-height: 30px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .help-message {
-    display: none;
-    background: #333;
-    color: #9acfff;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-top: 10px;
-    text-align: center;
-  }
-  .help-circle.active + .help-message {
-    display: block;
-  }
-  .bottom-text {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-    color: #666;
-  }
-  .bottom-text a {
-    color: #0af;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .bottom-text a:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>EverFrost - Connexion</title>
+  <!-- Colle ici le même CSS que register.html (ou mets-le dans un fichier commun) -->
+  <style>
+    /* Copie le même style que dans register.html */
+    /* ... */
+  </style>
 </head>
 <body>
+  <div class="container">
+    <div class="help-circle" id="helpBtn">?</div>
+    <div class="help-message" id="helpMsg">Si vous avez perdu votre mot de passe, demandez à Kenzo.</div>
+    
+    <h1>Connexion</h1>
 
-<div class="container">
-  <div class="help-circle" id="helpBtn">?</div>
-  <div class="help-message" id="helpMsg">
-    Si vous avez perdu votre mot de passe, demandez à Kenzo.
+    <form id="loginForm">
+      <label for="email">Adresse e-mail</label>
+      <input type="email" id="email" required placeholder="exemple@exemple.com" />
+
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" required placeholder="••••••••" />
+
+      <button type="submit">Se connecter</button>
+    </form>
+
+    <div class="bottom-text">
+      Pas encore inscrit ? <a href="register.html">Créer un compte</a>
+    </div>
   </div>
 
-  <h1>Connexion</h1>
+  <script>
+    const helpBtn = document.getElementById('helpBtn');
+    helpBtn.addEventListener('click', () => {
+      helpBtn.classList.toggle('active');
+    });
 
-  <form id="loginForm">
-    <label for="email">Adresse e-mail</label>
-    <input type="email" id="email" required placeholder="exemple@exemple.com" />
-    <label for="password">Mot de passe</label>
-    <input type="password" id="password" required placeholder="••••••••" />
-    <button type="submit">Se connecter</button>
-  </form>
-
-  <div class="bottom-text">
-    Pas encore inscrit ? <a href="register.html">Crée un compte</a>
-  </div>
-</div>
-
-<script>
-  const helpBtn = document.getElementById('helpBtn');
-  const helpMsg = document.getElementById('helpMsg');
-  helpBtn.addEventListener('click', () => {
-    helpBtn.classList.toggle('active');
-  });
-
-  document.getElementById('loginForm').addEventListener('submit', e => {
-    e.preventDefault();
-    // Ici tu mets ta logique de connexion Firebase
-    alert("Connexion en cours... (à implémenter)");
-  });
-</script>
-
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      // Ici tu peux intégrer la connexion Firebase
+      alert("Connexion en cours... (à implémenter)");
+    });
+  </script>
 </body>
 </html>
