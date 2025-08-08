@@ -1,88 +1,68 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TitiCraft - Inscription</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="container">
-    <h1>Créer un compte</h1>
-    <div id="error" class="error-message"></div>
-    <input type="text" id="pseudo" placeholder="Pseudo" required />
-    <input type="email" id="email" placeholder="Adresse email" required />
-    <input type="password" id="password" placeholder="Mot de passe" required />
-    <button id="registerBtn">S'inscrire</button>
-    <a href="login.html" class="link">Déjà un compte ? Se connecter</a>
-  </div>
+/* style.css */
+body {
+  background: linear-gradient(135deg, #4a90e2, #50e3c2);
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  color: #fff;
+}
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+.container {
+  background: rgba(0,0,0,0.35);
+  padding: 40px 60px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  width: 350px;
+  text-align: center;
+}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-      authDomain: "message-957c6.firebaseapp.com",
-      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "message-957c6",
-      storageBucket: "message-957c6.appspot.com",
-      messagingSenderId: "518720941529",
-      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-      measurementId: "G-GW0GKGQ9EP"
-    };
+h1 {
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 2.2rem;
+  letter-spacing: 1px;
+}
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  margin: 15px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
 
-    const errorDiv = document.getElementById('error');
-    const registerBtn = document.getElementById('registerBtn');
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #50e3c2;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #000;
+  transition: background-color 0.3s ease;
+}
 
-    registerBtn.addEventListener('click', () => {
-      const pseudo = document.getElementById('pseudo').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+button:hover {
+  background-color: #3bbba3;
+}
 
-      errorDiv.textContent = '';
+a {
+  color: #d4f7f0;
+  text-decoration: none;
+  margin-top: 15px;
+  display: inline-block;
+}
 
-      if (!pseudo || !email || !password) {
-        errorDiv.textContent = "Tous les champs sont obligatoires.";
-        return;
-      }
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-          const user = userCredential.user;
-          return updateProfile(user, { displayName: pseudo })
-            .then(() => {
-              // Créer l'entrée utilisateur dans la DB avec les diamants = 0 et id aléatoire
-              const userId = user.uid;
-              const diamonds = 0;
-              return set(ref(db, 'users/' + userId), {
-                pseudo,
-                email,
-                diamonds
-              });
-            })
-            .then(() => {
-              alert('Compte créé avec succès !');
-              window.location.href = 'home.html';
-            });
-        })
-        .catch(error => {
-          if (error.code === 'auth/email-already-in-use') {
-            errorDiv.textContent = 'Cette adresse email est déjà utilisée.';
-          } else if (error.code === 'auth/invalid-email') {
-            errorDiv.textContent = 'Email invalide.';
-          } else if (error.code === 'auth/weak-password') {
-            errorDiv.textContent = 'Le mot de passe est trop faible.';
-          } else {
-            errorDiv.textContent = error.message;
-          }
-        });
-    });
-  </script>
-</body>
-</html>
+a:hover {
+  text-decoration: underline;
+}
