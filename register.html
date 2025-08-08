@@ -1,58 +1,154 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inscription - TitiCraft</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Inscription - TitiCraft</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+  body {
+    margin: 0; 
+    background: #121212;
+    color: #eee;
+    font-family: 'Poppins', sans-serif;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh;
+  }
+  .container {
+    background: #1f1f1f;
+    padding: 40px 50px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px #0af;
+    width: 350px;
+    position: relative;
+  }
+  h1 {
+    margin-bottom: 30px;
+    font-weight: 700;
+    text-align: center;
+    color: #0af;
+  }
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #9acfff;
+  }
+  input[type="text"], input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 10px 15px;
+    margin-bottom: 25px;
+    border-radius: 6px;
+    border: none;
+    background: #333;
+    color: #eee;
+    font-size: 15px;
+    outline: none;
+    transition: background 0.3s;
+  }
+  input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+    background: #2a2a2a;
+  }
+  button {
+    width: 100%;
+    padding: 12px 0;
+    background: #0af;
+    border: none;
+    border-radius: 8px;
+    color: #121212;
+    font-weight: 700;
+    font-size: 17px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #07a;
+  }
+  .help-circle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #0af;
+    color: #121212;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 22px;
+    text-align: center;
+    line-height: 30px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .help-message {
+    display: none;
+    background: #333;
+    color: #9acfff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .help-circle.active + .help-message {
+    display: block;
+  }
+  .bottom-text {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+  }
+  .bottom-text a {
+    color: #0af;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .bottom-text a:hover {
+    text-decoration: underline;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Créer un compte</h1>
 
-    <div class="help-circle" id="help">?</div>
-
-    <input type="text" id="pseudo" placeholder="Pseudo" />
-    <input type="email" id="email" placeholder="Adresse email" />
-    <input type="password" id="password" placeholder="Mot de passe" />
-    <button id="registerBtn">S'inscrire</button>
-    <a href="login.html">Déjà un compte ? Se connecter</a>
+<div class="container">
+  <div class="help-circle" id="helpBtn">?</div>
+  <div class="help-message" id="helpMsg">
+    Si vous avez perdu votre mot de passe, demandez à Kenzo.
   </div>
 
-  <script type="module">
-    // Firebase import + config ici (idem avant)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+  <h1>Créer un compte</h1>
 
-    const firebaseConfig = {
-      // ta config Firebase ici
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  <form id="registerForm">
+    <label for="pseudo">Pseudo</label>
+    <input type="text" id="pseudo" required placeholder="Ton pseudo" />
+    <label for="email">Adresse e-mail</label>
+    <input type="email" id="email" required placeholder="exemple@exemple.com" />
+    <label for="password">Mot de passe</label>
+    <input type="password" id="password" required placeholder="••••••••" />
+    <button type="submit">S'inscrire</button>
+  </form>
 
-    document.getElementById('registerBtn').addEventListener('click', () => {
-      const pseudo = document.getElementById('pseudo').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+  <div class="bottom-text">
+    Déjà inscrit ? <a href="login.html">Se connecter</a>
+  </div>
+</div>
 
-      if (!pseudo || !email || !password) {
-        alert("Merci de remplir tous les champs.");
-        return;
-      }
+<script>
+  const helpBtn = document.getElementById('helpBtn');
+  const helpMsg = document.getElementById('helpMsg');
+  helpBtn.addEventListener('click', () => {
+    helpBtn.classList.toggle('active');
+  });
 
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => updateProfile(userCredential.user, { displayName: pseudo }))
-        .then(() => {
-          alert("Compte créé avec succès !");
-          window.location.href = "login.html";
-        })
-        .catch(error => alert(error.message));
-    });
+  document.getElementById('registerForm').addEventListener('submit', e => {
+    e.preventDefault();
+    // Ici tu mets ta logique d'inscription Firebase
+    alert("Inscription en cours... (à implémenter)");
+  });
+</script>
 
-    // Help message quand on clique sur ?
-    document.getElementById('help').addEventListener('click', () => {
-      alert("Si vous avez perdu votre mot de passe ou rencontré un problème, contactez Kenzo.");
-    });
-  </script>
 </body>
 </html>
