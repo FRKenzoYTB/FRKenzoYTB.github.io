@@ -2,87 +2,16 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Titicraft - Inscription</title>
+  <title>Inscription - TitiCraft</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #282c34;
-      color: #eee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background: #3b3f47;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00bfff;
-      width: 300px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 1rem;
-      color: #00bfff;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 0.5rem 0 1rem;
-      border-radius: 5px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      background: #00bfff;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      font-size: 1rem;
-      color: #282c34;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: background 0.3s ease;
-    }
-    button:hover {
-      background: #008fc1;
-    }
-    .error {
-      color: #ff6b6b;
-      margin-bottom: 1rem;
-    }
-    .link {
-      margin-top: 1rem;
-      display: block;
-      color: #00bfff;
-      text-decoration: none;
-    }
-    .link:hover {
-      text-decoration: underline;
-    }
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
+    input, button { width: 100%; padding: 10px; margin: 8px 0; }
+    button { cursor: pointer; }
   </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Inscription Titicraft</h1>
-    <form id="registerForm">
-      <input id="pseudo" type="text" placeholder="Pseudo" required minlength="3" />
-      <input id="email" type="email" placeholder="Adresse email" required />
-      <input id="password" type="password" placeholder="Mot de passe" required minlength="6" />
-      <div class="error" id="errorMsg"></div>
-      <button type="submit">S'inscrire</button>
-    </form>
-    <a class="link" href="login.html">Déjà un compte ? Se connecter</a>
-  </div>
-
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
-    // Ta config Firebase ici (change par la tienne)
     const firebaseConfig = {
       apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
       authDomain: "message-957c6.firebaseapp.com",
@@ -97,53 +26,43 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    const form = document.getElementById("registerForm");
-    const errorMsg = document.getElementById("errorMsg");
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      errorMsg.textContent = "";
-
+    window.register = () => {
       const pseudo = document.getElementById("pseudo").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      if (pseudo.length < 3) {
-        errorMsg.textContent = "Le pseudo doit faire au moins 3 caractères.";
+      if (!pseudo || !email || !password) {
+        alert("Merci de remplir tous les champs.");
         return;
       }
       if (password.length < 6) {
-        errorMsg.textContent = "Le mot de passe doit faire au moins 6 caractères.";
+        alert("Le mot de passe doit faire au moins 6 caractères.");
         return;
       }
 
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
-          // Met à jour le pseudo (displayName)
-          updateProfile(userCredential.user, {
-            displayName: pseudo
-          }).then(() => {
-            alert("Inscription réussie ! Tu peux maintenant te connecter.");
-            window.location.href = "login.html"; // Redirection vers login
-          });
+          const user = userCredential.user;
+          return updateProfile(user, { displayName: pseudo }).then(() => user);
+        })
+        .then((user) => sendEmailVerification(user))
+        .then(() => {
+          alert("Inscription réussie ! Un email de vérification a été envoyé. Vérifie ta boîte mail.");
+          window.location.href = "login.html";
         })
         .catch((error) => {
-          // Affiche les erreurs les plus courantes
-          switch (error.code) {
-            case "auth/email-already-in-use":
-              errorMsg.textContent = "Cette adresse email est déjà utilisée.";
-              break;
-            case "auth/invalid-email":
-              errorMsg.textContent = "Adresse email invalide.";
-              break;
-            case "auth/weak-password":
-              errorMsg.textContent = "Le mot de passe est trop faible.";
-              break;
-            default:
-              errorMsg.textContent = error.message;
-          }
+          alert("Erreur : " + error.message);
         });
-    });
+    };
   </script>
+</head>
+<body>
+  <h1>Inscription sur TitiCraft</h1>
+  <input type="text" id="pseudo" placeholder="Pseudo" required />
+  <input type="email" id="email" placeholder="Adresse email" required />
+  <input type="password" id="password" placeholder="Mot de passe (min 6 caractères)" required />
+  <button onclick="register()">S'inscrire</button>
+  <p>Tu as déjà un compte ? <a href="login.html">Connexion</a></p>
 </body>
 </html>
+
