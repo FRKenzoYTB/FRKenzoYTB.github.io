@@ -3,52 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paramètres - Titicraft</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: white;
-      text-align: center;
-      padding-top: 50px;
-    }
-    .container {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      margin: auto;
-      width: 90%;
-      max-width: 400px;
-      border-radius: 10px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    button {
-      background: #ffcc00;
-      border: none;
-      padding: 10px 15px;
-      margin: 10px 5px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover {
-      background: #ffaa00;
-    }
-  </style>
+  <title>Paramètres</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <div class="container">
+    <!-- Bouton retour -->
+    <div id="backBtn" title="Retour" style="position:absolute; top:15px; left:15px; font-size:24px; cursor:pointer;">⬅️</div>
+
     <h1>Paramètres</h1>
-    <p id="userInfo">Chargement...</p>
-    <div>
-      <button onclick="window.location.href='home.html'">⬅️ Retour</button>
-      <button id="logoutBtn">Se déconnecter</button>
+
+    <input type="text" id="newUsername" placeholder="Nouveau pseudo">
+    <button id="saveUsername">Changer le pseudo</button>
+
+    <input type="email" id="newEmail" placeholder="Nouvel email">
+    <button id="saveEmail">Changer l'email</button>
+
+    <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+    <button id="savePassword">Changer le mot de passe</button>
+
+    <div style="margin-top:20px;">
+      💎 <input type="number" id="diamondInput" min="0" style="width:80px; text-align:center;"> diamants
+      <button id="saveDiamonds">Mettre à jour</button>
     </div>
   </div>
 
   <script type="module" src="settings.js"></script>
 </body>
 </html>
+
