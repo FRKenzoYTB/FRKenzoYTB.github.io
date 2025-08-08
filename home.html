@@ -35,10 +35,10 @@
       font-weight: bold;
       font-size: 1.2rem;
     }
-    #diamants img {
-      width: 24px;
-      height: 24px;
+    #diamants span.emoji {
+      font-size: 24px;
       user-select: none;
+      line-height: 1;
     }
     #settingsBtn {
       background: none;
@@ -137,8 +137,8 @@
     <div id="pseudoUser">Utilisateur</div>
 
     <div id="diamants" title="Diamants">
-      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Diamant" />
-      <span id="diamantCount">10</span>
+      <span class="emoji">💎</span>
+      <span id="diamantCount">0</span>
     </div>
 
     <button id="settingsBtn" title="Paramètres" aria-label="Paramètres">⚙️</button>
@@ -156,8 +156,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
     // Config Firebase
     const firebaseConfig = {
@@ -171,10 +172,13 @@
       measurementId: "G-GW0GKGQ9EP"
     };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
+    // DOM Elements
     const pseudoUser = document.getElementById("pseudoUser");
     const logoutBtn = document.getElementById("logoutBtn");
     const chatBox = document.getElementById("chatBox");
@@ -185,37 +189,7 @@
 
     let currentUser = null;
 
-    // Vérifier connexion
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-      currentUser = user;
-      pseudoUser.textContent = user.displayName || "Anonyme";
-
-      // Afficher diamants fictifs (à remplacer par une vraie source si besoin)
-      diamantCount.textContent = "10";
-
-      listenMessages();
-    });
-
-    // Écouter messages
-    function listenMessages() {
-      const messagesRef = ref(db, "messages");
-
-      onChildAdded(messagesRef, (snapshot) => {
-        const msg = snapshot.val();
-        const div = document.createElement("div");
-        div.classList.add("message");
-        div.classList.add(msg.uid === currentUser.uid ? "own" : "other");
-        div.innerHTML = `<span class="pseudo">${escapeHtml(msg.pseudo)}:</span> ${escapeHtml(msg.text)}`;
-        chatBox.appendChild(div);
-        chatBox.scrollTop = chatBox.scrollHeight;
-      });
-    }
-
-    // Sécurité HTML
+    // Échapper HTML
     function escapeHtml(text) {
       const map = {
         '&': '&amp;',
@@ -227,7 +201,46 @@
       return text.replace(/[&<>"']/g, m => map[m]);
     }
 
-    // Envoyer message
+    // Met à jour l'affichage du nombre de diamants en temps réel
+    function listenDiamonds(uid) {
+      const diamondsRef = ref(db, 'users/' + uid + '/diamonds');
+      onValue(diamondsRef, (snapshot) => {
+        const diamonds = snapshot.val();
+        diamantCount.textContent = diamonds !== null ? diamonds : 0;
+      });
+    }
+
+    // Écoute des messages pour le chat
+    function listenMessages() {
+      const messagesRef = ref(db, "messages");
+      onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(msg.uid === currentUser.uid ? "own" : "other");
+        div.innerHTML = `<span class="pseudo">${escapeHtml(msg.pseudo)}:</span> ${escapeHtml(msg.text)}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    // Surveille l'état de connexion
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      pseudoUser.textContent = user.displayName || "Anonyme";
+
+      // Démarrer écoute des diamants de l'utilisateur
+      listenDiamonds(user.uid);
+
+      // Démarrer écoute du chat
+      listenMessages();
+    });
+
+    // Envoyer un message
     msgForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = msgInput.value.trim();
@@ -251,11 +264,10 @@
       });
     });
 
-    // Action bouton paramètres
+    // Paramètres (simple alert pour l'instant)
     settingsBtn.addEventListener("click", () => {
       alert("Ouverture des paramètres (à implémenter)");
     });
   </script>
 </body>
 </html>
-
