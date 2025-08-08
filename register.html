@@ -9,6 +9,9 @@
 <body>
   <div class="container">
     <h1>Créer un compte</h1>
+
+    <div class="help-circle" id="help">?</div>
+
     <input type="text" id="pseudo" placeholder="Pseudo" />
     <input type="email" id="email" placeholder="Adresse email" />
     <input type="password" id="password" placeholder="Mot de passe" />
@@ -17,11 +20,12 @@
   </div>
 
   <script type="module">
+    // Firebase import + config ici (idem avant)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
     const firebaseConfig = {
-      // Ta config Firebase ici
+      // ta config Firebase ici
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -32,27 +36,23 @@
       const password = document.getElementById('password').value.trim();
 
       if (!pseudo || !email || !password) {
-        alert("Merci de remplir tous les champs");
+        alert("Merci de remplir tous les champs.");
         return;
       }
 
       createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          return updateProfile(userCredential.user, { displayName: pseudo });
-        })
+        .then(userCredential => updateProfile(userCredential.user, { displayName: pseudo }))
         .then(() => {
           alert("Compte créé avec succès !");
           window.location.href = "login.html";
         })
-        .catch((error) => {
-          alert(error.message);
-        });
+        .catch(error => alert(error.message));
+    });
+
+    // Help message quand on clique sur ?
+    document.getElementById('help').addEventListener('click', () => {
+      alert("Si vous avez perdu votre mot de passe ou rencontré un problème, contactez Kenzo.");
     });
   </script>
 </body>
 </html>
-
-<script type="module" src="register.js"></script>
-</body>
-</html>
-
