@@ -3,7 +3,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebas
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
-// Config Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
   authDomain: "message-957c6.firebaseapp.com",
@@ -15,32 +14,31 @@ const firebaseConfig = {
   measurementId: "G-GW0GKGQ9EP"
 };
 
-// Initialisation
+// Initialisation Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-// Sélecteurs
+const welcomeMsg = document.getElementById("welcomeMsg");
+const diamondCount = document.getElementById("diamondCount");
 const logoutBtn = document.getElementById("logoutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
-const pseudoUser = document.getElementById("pseudoUser");
-const diamantsUser = document.getElementById("diamantsUser");
 
-// Vérification connexion
+// Vérifie si l'utilisateur est connecté
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "login.html";
   } else {
-    // Afficher le pseudo
-    pseudoUser.textContent = user.displayName || user.email;
+    // Affiche son pseudo ou email
+    welcomeMsg.textContent = `Bienvenue ${user.displayName || user.email} !`;
 
-    // Charger le nombre de diamants depuis Firebase
-    const userDiamantsRef = ref(db, "users/" + user.uid + "/diamants");
-    get(userDiamantsRef).then(snapshot => {
+    // Récupère les diamants depuis Firebase Realtime Database
+    const userRef = ref(db, "users/" + user.uid + "/diamonds");
+    get(userRef).then(snapshot => {
       if (snapshot.exists()) {
-        diamantsUser.textContent = snapshot.val();
+        diamondCount.textContent = snapshot.val();
       } else {
-        diamantsUser.textContent = 0;
+        diamondCount.textContent = "0";
       }
     });
   }
@@ -53,7 +51,8 @@ logoutBtn.addEventListener("click", () => {
   });
 });
 
-// Aller dans les paramètres
+// Bouton paramètres
 settingsBtn.addEventListener("click", () => {
   window.location.href = "settings.html";
 });
+
