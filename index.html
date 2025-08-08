@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Mini Chat Firebase</title>
+<title>Mini Chat Firebase (modulaire)</title>
 <style>
   body, html {
     height: 100%;
@@ -58,63 +58,60 @@
   </div>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-<script>
-  // Ta config Firebase ici
   const firebaseConfig = {
-    apiKey: "ton_api_key",
-    authDomain: "ton_projet.firebaseapp.com",
-    databaseURL: "https://ton_projet-default-rtdb.firebaseio.com",
-    projectId: "ton_projet",
-    storageBucket: "ton_projet.appspot.com",
-    messagingSenderId: "xxxxxxx",
-    appId: "x:xxxx:web:xxxxxx"
+    apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+    authDomain: "message-957c6.firebaseapp.com",
+    databaseURL: "https://message-957c6-default-rtdb.firebaseio.com",
+    projectId: "message-957c6",
+    storageBucket: "message-957c6.appspot.com",
+    messagingSenderId: "518720941529",
+    appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+    measurementId: "G-GW0GKGQ9EP"
   };
 
-  // Initialiser Firebase
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
   const messagesDiv = document.getElementById('messages');
   const input = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
 
-  // Fonction pour afficher un message
   function displayMessage(text) {
     const msgEl = document.createElement('div');
     msgEl.textContent = text;
     messagesDiv.appendChild(msgEl);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll en bas
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // Envoyer un message
   sendBtn.addEventListener('click', () => {
     const text = input.value.trim();
     if(text.length === 0) return;
 
-    // Push message dans Firebase
-    db.ref('messages').push({
+    push(ref(db, 'messages'), {
       text: text,
       timestamp: Date.now()
     });
+
     input.value = '';
   });
 
-  // Écouter les nouveaux messages en temps réel
-  db.ref('messages').limitToLast(50).on('child_added', (snapshot) => {
+  input.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') sendBtn.click();
+  });
+
+  // Récupérer les 50 derniers messages en temps réel
+  const recentMessagesQuery = query(ref(db, 'messages'), limitToLast(50));
+  onChildAdded(recentMessagesQuery, (snapshot) => {
     const msg = snapshot.val();
     displayMessage(msg.text);
   });
 
-  // Optionnel : envoyer avec la touche Entrée
-  input.addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') sendBtn.click();
-  });
 </script>
 
 </body>
 </html>
-
