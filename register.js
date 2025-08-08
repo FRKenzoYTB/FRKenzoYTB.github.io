@@ -36,7 +36,7 @@ btn.addEventListener("click", () => {
         return set(ref(db, 'users/' + user.uid), {
           pseudo: pseudo,
           email: email,
-          diamonds: 0
+          diamonds: 20
         });
       });
     })
