@@ -2,29 +2,28 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>EverFrost - Se connecter</title>
+  <title>EverFrost - Connexion</title>
   <style>
+    /* Même CSS que register.html pour garder cohérence */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #282c34;
       color: white;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       height: 100vh;
       margin: 0;
     }
     h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1.5rem;
+      font-size: 3rem;
+      margin-bottom: 2rem;
     }
     form {
       display: flex;
       flex-direction: column;
-      background: #3a3f4b;
-      padding: 2rem;
-      border-radius: 12px;
-      width: 320px;
-      box-shadow: 0 0 15px #61dafb;
-      position: relative;
+      align-items: center;
     }
     input {
       background: #22272e;
@@ -34,30 +33,23 @@
       border-radius: 8px;
       color: white;
       font-size: 1rem;
-    }
-    input::placeholder {
-      color: #888;
+      width: 250px;
     }
     button {
       background: #61dafb;
       color: black;
+      padding: 1rem 2rem;
       border: none;
-      padding: 1rem;
-      border-radius: 10px;
+      border-radius: 8px;
       font-weight: bold;
       font-size: 1.2rem;
       cursor: pointer;
       transition: background 0.3s ease;
+      margin-bottom: 1rem;
     }
     button:hover {
       background: #21a1f1;
       color: white;
-    }
-    .info {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #ccc;
-      text-align: center;
     }
     a {
       color: #61dafb;
@@ -67,59 +59,35 @@
     a:hover {
       text-decoration: underline;
     }
-    .error {
-      color: #ff6b6b;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
     .help-circle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 26px;
-      height: 26px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      background: #61dafb;
+      background-color: #61dafb;
       color: black;
       font-weight: bold;
-      font-size: 18px;
       cursor: pointer;
       user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      margin-left: 10px;
+      font-size: 18px;
+      vertical-align: middle;
     }
   </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+</head>
+<body>
+  <h1>Connexion à EverFrost
+    <span class="help-circle" onclick="alert('Si vous avez perdu votre mot de passe, demandez à Kenzo !')">?</span>
+  </h1>
+  <form id="loginForm" onsubmit="return false;">
+    <input id="email" type="email" placeholder="Email" required />
+    <input id="password" type="password" placeholder="Mot de passe" required minlength="6" />
+    <button id="loginBtn" type="submit">Se connecter</button>
+  </form>
+  <a href="register.html">Pas de compte ? Créer un compte</a>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-      authDomain: "message-957c6.firebaseapp.com",
-      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "message-957c6",
-      storageBucket: "message-957c6.appspot.com",
-      messagingSenderId: "518720941529",
-      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-      measurementId: "G-GW0GKGQ9EP"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('loginForm');
-      const errorDiv = document.getElementById('error');
-      const helpBtn = document.getElementById('helpBtn');
-
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorDiv.textContent = '';
-        const email = form.email.value.trim();
-        const password = form.password.value;
-
-        try {
-          await signInWithEmailAndPassword(auth, email, password);
-          // redirige vers home.html après connexion
-          window
+  <script type="module" src="login.js"></script>
+</body>
+</html>
