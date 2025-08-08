@@ -17,7 +17,7 @@
       background: #3a3f4b;
       padding: 1rem 2rem;
       display: flex;
-      justify-content: flex-end; /* boutons à droite */
+      justify-content: flex-end;
       align-items: center;
       position: relative;
       gap: 10px;
@@ -201,7 +201,7 @@
       return text.replace(/[&<>"']/g, m => map[m]);
     }
 
-    // Met à jour l'affichage du nombre de diamants en temps réel
+    // Met à jour l'affichage du nombre de diamants
     function listenDiamonds(uid) {
       const diamondsRef = ref(db, 'users/' + uid + '/diamonds');
       onValue(diamondsRef, (snapshot) => {
@@ -210,7 +210,7 @@
       });
     }
 
-    // Écoute des messages pour le chat
+    // Écoute des messages du chat
     function listenMessages() {
       const messagesRef = ref(db, "messages");
       onChildAdded(messagesRef, (snapshot) => {
@@ -224,7 +224,7 @@
       });
     }
 
-    // Surveille l'état de connexion
+    // Vérifie l'état de connexion
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "login.html";
@@ -233,14 +233,11 @@
       currentUser = user;
       pseudoUser.textContent = user.displayName || "Anonyme";
 
-      // Démarrer écoute des diamants de l'utilisateur
       listenDiamonds(user.uid);
-
-      // Démarrer écoute du chat
       listenMessages();
     });
 
-    // Envoyer un message
+    // Envoi d'un message
     msgForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = msgInput.value.trim();
@@ -264,9 +261,9 @@
       });
     });
 
-    // Paramètres (simple alert pour l'instant)
+    // Redirection vers settings.html
     settingsBtn.addEventListener("click", () => {
-      alert("Ouverture des paramètres (à implémenter)");
+      window.location.href = "settings.html";
     });
   </script>
 </body>
