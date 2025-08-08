@@ -38,4 +38,6 @@ btn.addEventListener("click", () => {
 // Si utilisateur déjà connecté, redirige vers home
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    window.location.href = "
+    window.location.href = "home.html";
+  }
+});
