@@ -1,115 +1,135 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<title>Mini Chat Firebase (modulaire)</title>
-<style>
-  body, html {
-    height: 100%;
-    margin: 0; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    background: #f0f0f0;
-  }
-  #chat {
-    width: 300px;
-    height: 400px;
-    background: white;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  }
-  #messages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    border-bottom: 1px solid #ccc;
-  }
-  #inputArea {
-    display: flex;
-  }
-  #inputArea input {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 0 0 0 10px;
-    font-size: 14px;
-  }
-  #inputArea button {
-    padding: 10px 15px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 0 0 10px 0;
-    cursor: pointer;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Chat Firebase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      justify-content: center;
+      align-items: center;
+      background: #222;
+      color: white;
+    }
+    #messages {
+      width: 80vw;
+      max-width: 600px;
+      height: 300px;
+      background: #333;
+      padding: 10px;
+      overflow-y: auto;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #messages div {
+      background: #555;
+      padding: 6px 10px;
+      border-radius: 5px;
+      word-wrap: break-word;
+    }
+    form {
+      display: flex;
+      gap: 10px;
+      width: 80vw;
+      max-width: 600px;
+    }
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      padding: 8px 16px;
+      border-radius: 5px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #45a049;
+    }
+  </style>
 </head>
 <body>
 
-<div id="chat">
   <div id="messages"></div>
-  <div id="inputArea">
-    <input type="text" id="messageInput" placeholder="Écrire un message..." />
-    <button id="sendBtn">Envoyer</button>
-  </div>
-</div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, query, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+  <form id="form">
+    <input type="text" id="messageInput" placeholder="Écris un message..." autocomplete="off" />
+    <button type="submit">Envoyer</button>
+  </form>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-    authDomain: "message-957c6.firebaseapp.com",
-    databaseURL: "https://message-957c6-default-rtdb.firebaseio.com",
-    projectId: "message-957c6",
-    storageBucket: "message-957c6.appspot.com",
-    messagingSenderId: "518720941529",
-    appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-    measurementId: "G-GW0GKGQ9EP"
-  };
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getDatabase, ref, push, query, limitToLast, onChildAdded } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.appspot.com",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+      measurementId: "G-GW0GKGQ9EP"
+    };
 
-  const messagesDiv = document.getElementById('messages');
-  const input = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
+    // Initialise Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-  function displayMessage(text) {
-    const msgEl = document.createElement('div');
-    msgEl.textContent = text;
-    messagesDiv.appendChild(msgEl);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-  }
+    const messagesRef = ref(db, 'messages');
+    const recentMessagesQuery = query(messagesRef, limitToLast(50));
 
-  sendBtn.addEventListener('click', () => {
-    const text = input.value.trim();
-    if(text.length === 0) return;
+    const messagesDiv = document.getElementById('messages');
+    const form = document.getElementById('form');
+    const input = document.getElementById('messageInput');
 
-    push(ref(db, 'messages'), {
-      text: text,
-      timestamp: Date.now()
+    // Affiche un message dans la div
+    function displayMessage(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // scroll vers le bas
+    }
+
+    // Ecoute les messages existants + nouveaux en temps réel
+    onChildAdded(recentMessagesQuery, (snapshot) => {
+      const msg = snapshot.val();
+      if(msg && msg.text) {
+        displayMessage(msg.text);
+      }
     });
 
-    input.value = '';
-  });
+    // Envoie un message à Firebase quand on soumet le formulaire
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if(text.length > 0) {
+        push(messagesRef, {
+          text: text,
+          timestamp: Date.now()
+        });
+        input.value = '';
+      }
+    });
+  </script>
 
-  input.addEventListener('keypress', (e) => {
-    if(e.key === 'Enter') sendBtn.click();
-  });
-
-  // Récupérer les 50 derniers messages en temps réel
-  const recentMessagesQuery = query(ref(db, 'messages'), limitToLast(50));
-  onChildAdded(recentMessagesQuery, (snapshot) => {
-    const msg = snapshot.val();
-    displayMessage(msg.text);
-  });
+</body>
+</html>
 
 </script>
 
