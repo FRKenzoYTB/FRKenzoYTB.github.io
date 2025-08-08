@@ -9,8 +9,11 @@ import {
   ref,
   get,
   onValue,
+  set,
   push,
+  update,
   serverTimestamp,
+  remove,
 } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -19,7 +22,7 @@ const firebaseConfig = {
   databaseURL:
     "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "message-957c6",
-  storageBucket: "message-957c6.firebasestorage.app",
+  storageBucket: "message-957c6.firebasedatabase.app",
   messagingSenderId: "518720941529",
   appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
   measurementId: "G-GW0GKGQ9EP",
@@ -41,11 +44,14 @@ const sendChatBtn = document.getElementById("sendChatBtn");
 const transactionsList = document.getElementById("transactionsList");
 const enterprisesList = document.getElementById("enterprisesList");
 
+const serverListDiv = document.getElementById("serverList");
+const addServerBtn = document.getElementById("addServerBtn");
+
 let currentUser = null;
 let currentServerId = null;
 let chatRef = null;
+let unsubscribeChat = null;
 
-// Déconnexion
 logoutBtn.addEventListener("click", () => {
   signOut(auth)
     .then(() => {
@@ -56,13 +62,34 @@ logoutBtn.addEventListener("click", () => {
     });
 });
 
-// Accès page paramètres
 settingsBtn.addEventListener("click", () => {
   window.location.href = "settings.html";
 });
 
-// Connexion / état utilisateur
-onAuthStateChanged(auth, (user) => {
+sendChatBtn.addEventListener("click", () => {
+  sendMessage();
+});
+chatInput.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
+
+addServerBtn.addEventListener("click", async () => {
+  const name = prompt("Nom du nouveau serveur ?");
+  if (!name || !currentUser) return alert("Nom serveur invalide");
+
+  // Créer serveur dans BDD
+  const newServerRef = push(ref(db, "servers"));
+  await set(newServerRef, {
+    name: name,
+    members: { [currentUser.uid]: true },
+  });
+  alert("Serveur créé, il apparaît dans ta liste.");
+
+  // Recharge la liste des serveurs
+  loadUserServers();
+});
+
+onAuthStateChanged(auth, async (user) => {
   if (!user) {
     window.location.href = "login.html";
   } else {
@@ -71,31 +98,63 @@ onAuthStateChanged(auth, (user) => {
 
     // Charger diamants
     const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
-    get(diamondRef).then((snapshot) => {
-      if (snapshot.exists()) {
-        diamantCount.textContent = snapshot.val();
-      } else {
-        diamantCount.textContent = "0";
-      }
-    });
+    const snapDiamonds = await get(diamondRef);
+    diamantCount.textContent = snapDiamonds.exists() ? snapDiamonds.val() : "0";
 
     // Charger transactions globales
     loadTransactions();
 
-    // Par défaut, charger le premier serveur
-    if (window.servers && window.servers.length > 0) {
-      loadServer(window.servers[0].id, window.servers[0].name);
-    }
+    // Charger serveurs où user est membre
+    loadUserServers();
   }
 });
 
-// Envoi message chat
-sendChatBtn.addEventListener("click", () => {
-  sendMessage();
-});
-chatInput.addEventListener("keyup", (e) => {
-  if (e.key === "Enter") sendMessage();
-});
+async function loadUserServers() {
+  serverListDiv.innerHTML = "Chargement serveurs...";
+  if (!currentUser) return;
+
+  const serversRef = ref(db, "servers");
+  const snapshot = await get(serversRef);
+  if (!snapshot.exists()) {
+    serverListDiv.textContent = "Aucun serveur trouvé.";
+    return;
+  }
+
+  const servers = snapshot.val();
+  // Filtrer serveurs où user est membre
+  const userServers = Object.entries(servers).filter(
+    ([serverId, server]) => server.members && server.members[currentUser.uid]
+  );
+
+  if (userServers.length === 0) {
+    serverListDiv.innerHTML =
+      "Tu n'es membre d'aucun serveur.<br>Utilise le bouton 'Ajouter serveur' pour en créer un.";
+    enterprisesList.innerHTML = "";
+    chatMessages.innerHTML = "";
+    transactionsList.innerHTML = "";
+    return;
+  }
+
+  // Afficher liste serveurs dans sidebar
+  serverListDiv.innerHTML = "";
+  userServers.forEach(([serverId, server]) => {
+    const div = document.createElement("div");
+    div.textContent = server.name;
+    div.style.padding = "8px";
+    div.style.cursor = "pointer";
+    div.style.borderBottom = "1px solid #ccc";
+
+    // Au clic charger serveur
+    div.addEventListener("click", () => {
+      loadServer(serverId, server.name);
+    });
+
+    serverListDiv.appendChild(div);
+  });
+
+  // Charger le premier serveur par défaut
+  loadServer(userServers[0][0], userServers[0][1].name);
+}
 
 function sendMessage() {
   if (!currentServerId || !currentUser) return;
@@ -106,6 +165,7 @@ function sendMessage() {
   newMsgRef
     .set({
       user: currentUser.displayName || "Utilisateur",
+      uid: currentUser.uid,
       text: msg,
       timestamp: serverTimestamp(),
     })
@@ -118,35 +178,29 @@ function sendMessage() {
 function loadServer(serverId, serverName) {
   currentServerId = serverId;
 
-  // Afficher noms serveur dans UI
+  // Afficher serveur courant dans UI (tu peux adapter dans HTML)
   document.getElementById("currentServerName").textContent = serverName;
-  document.getElementById("currentServerNameShop").textContent = serverName;
 
-  // Charger chat serveur
-  if (chatRef) {
-    // Désabonner l'ancien chat
-    chatRef.off();
-  }
+  // Charger chat
+  if (unsubscribeChat) unsubscribeChat();
+  chatMessages.innerHTML = "<i>Chargement messages...</i>";
 
-  chatMessages.innerHTML = "<i>Chargement des messages...</i>";
-
-  chatRef = ref(db, `servers/${serverId}/chat`);
-  onValue(
-    chatRef,
+  const chatRefLocal = ref(db, `servers/${serverId}/chat`);
+  unsubscribeChat = onValue(
+    chatRefLocal,
     (snapshot) => {
       chatMessages.innerHTML = "";
       if (!snapshot.exists()) {
-        chatMessages.textContent = "Aucun message pour l'instant.";
+        chatMessages.textContent = "Aucun message.";
         return;
       }
       const msgs = snapshot.val();
-      // msgs est un objet avec clés push firebase
+      // Trie messages par timestamp
       const sortedKeys = Object.keys(msgs).sort((a, b) => {
         if (!msgs[a].timestamp) return -1;
         if (!msgs[b].timestamp) return 1;
         return msgs[a].timestamp - msgs[b].timestamp;
       });
-
       sortedKeys.forEach((key) => {
         const m = msgs[key];
         const div = document.createElement("div");
@@ -158,8 +212,6 @@ function loadServer(serverId, serverName) {
         div.textContent = `[${time}] ${m.user}: ${m.text}`;
         chatMessages.appendChild(div);
       });
-
-      // Scroll bas
       chatMessages.scrollTop = chatMessages.scrollHeight;
     },
     (err) => {
@@ -167,36 +219,43 @@ function loadServer(serverId, serverName) {
     }
   );
 
-  // Charger entreprises du shop serveur
+  // Charger shop (entreprises + articles)
   loadEnterprises(serverId);
 }
 
-function loadEnterprises(serverId) {
-  enterprisesList.innerHTML = "<i>Chargement des entreprises...</i>";
+async function loadEnterprises(serverId) {
+  enterprisesList.innerHTML = "<i>Chargement entreprises...</i>";
   const entRef = ref(db, `servers/${serverId}/shop/enterprises`);
-  get(entRef)
-    .then((snapshot) => {
-      if (!snapshot.exists()) {
-        enterprisesList.innerHTML = "Aucune entreprise disponible.";
-        return;
-      }
-      const enterprises = snapshot.val();
-      enterprisesList.innerHTML = "";
-      Object.entries(enterprises).forEach(([id, ent]) => {
-        const div = document.createElement("div");
-        div.style.marginBottom = "10px";
-        div.style.padding = "8px";
-        div.style.background = "#184d81";
-        div.style.borderRadius = "6px";
+  const snapshot = await get(entRef);
+  if (!snapshot.exists()) {
+    enterprisesList.innerHTML = "Aucune entreprise disponible.";
+    return;
+  }
+  const enterprises = snapshot.val();
+  enterprisesList.innerHTML = "";
+  Object.entries(enterprises).forEach(([id, ent]) => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "10px";
+    div.style.padding = "8px";
+    div.style.background = "#184d81";
+    div.style.borderRadius = "6px";
 
-        div.innerHTML = `<strong>${ent.name || "Entreprise inconnue"}</strong><br/>
-          Articles: ${ent.articles ? Object.keys(ent.articles).length : 0}`;
-        enterprisesList.appendChild(div);
+    div.innerHTML = `<strong>${ent.name || "Entreprise inconnue"}</strong><br/>
+      Articles: ${ent.articles ? Object.keys(ent.articles).length : 0}`;
+
+    // Pour chaque article (optionnel)
+    if (ent.articles) {
+      const ul = document.createElement("ul");
+      Object.entries(ent.articles).forEach(([aid, art]) => {
+        const li = document.createElement("li");
+        li.textContent = `${art.name || "Article"} - Prix: ${art.price || "?"}`;
+        ul.appendChild(li);
       });
-    })
-    .catch((e) => {
-      enterprisesList.innerHTML = "Erreur chargement entreprises: " + e.message;
-    });
+      div.appendChild(ul);
+    }
+
+    enterprisesList.appendChild(div);
+  });
 }
 
 function loadTransactions() {
@@ -212,7 +271,7 @@ function loadTransactions() {
       }
       const transactions = snapshot.val();
 
-      // Trier par timestamp décroissant si possible
+      // Trier par timestamp décroissant
       const sortedKeys = Object.keys(transactions).sort((a, b) => {
         if (!transactions[a].timestamp) return 1;
         if (!transactions[b].timestamp) return -1;
@@ -223,19 +282,16 @@ function loadTransactions() {
         const t = transactions[key];
         const div = document.createElement("div");
 
-        // Exemple formatage transaction :  
-        // [-10 Diamants] Vous avez acheté "Steak" sur "Serveurtropcool"
-        // [+3 Diamants] "Lucas" vous a acheté 3 steak sur le serveur "nomduserv"
-
         let text = "";
         if (t.type === "achat") {
           if (t.userId === currentUser.uid) {
             text = `[-${t.amount} Diamants] Vous avez acheté "${t.item}" sur "${t.serverName}"`;
           } else {
-            text = `[+${t.amount} Diamants] "${t.userName || "Quelqu'un"}" vous a acheté ${t.itemCount || 1} ${t.item} sur le serveur "${t.serverName}"`;
+            text = `[+${t.amount} Diamants] "${t.userName || "Quelqu'un"}" vous a acheté ${
+              t.itemCount || 1
+            } ${t.item} sur le serveur "${t.serverName}"`;
           }
         } else {
-          // autre type transaction
           text = JSON.stringify(t);
         }
 
@@ -249,5 +305,3 @@ function loadTransactions() {
   );
 }
 
-// Permet à home.js d'être appelé par le script dans home.html pour charger serveur depuis boutons
-window.loadServer = loadServer;
