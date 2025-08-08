@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inscription / Connexion</title>
+  <script type="module" src="app.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    input, button { display: block; margin: 10px 0; padding: 10px; width: 100%; }
+    #error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Créer un compte / Se connecter</h1>
+
+  <input type="text" id="pseudo" placeholder="Pseudo" />
+  <input type="password" id="password" placeholder="Mot de passe" />
+  <button id="registerBtn">Créer un compte</button>
+  <button id="loginBtn">Se connecter</button>
+
+  <p id="error"></p>
+</body>
+</html>
