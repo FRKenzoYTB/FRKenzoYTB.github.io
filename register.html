@@ -1,68 +1,80 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Inscription - TitiCraft</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; padding: 20px; }
-    input, button { width: 100%; padding: 10px; margin: 8px 0; }
-    button { cursor: pointer; }
-  </style>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-      authDomain: "message-957c6.firebaseapp.com",
-      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "message-957c6",
-      storageBucket: "message-957c6.firebasestorage.app",
-      messagingSenderId: "518720941529",
-      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-      measurementId: "G-GW0GKGQ9EP"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    window.register = () => {
-      const pseudo = document.getElementById("pseudo").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-
-      if (!pseudo || !email || !password) {
-        alert("Merci de remplir tous les champs.");
-        return;
-      }
-      if (password.length < 6) {
-        alert("Le mot de passe doit faire au moins 6 caractères.");
-        return;
-      }
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          return updateProfile(user, { displayName: pseudo }).then(() => user);
-        })
-        .then((user) => sendEmailVerification(user))
-        .then(() => {
-          alert("Inscription réussie ! Un email de vérification a été envoyé. Vérifie ta boîte mail.");
-          window.location.href = "login.html";
-        })
-        .catch((error) => {
-          alert("Erreur : " + error.message);
-        });
-    };
-  </script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TitiCraft - Inscription</title>
+<style>
+  body {
+    background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .container {
+    background: rgba(0, 0, 30, 0.8);
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #0011ffcc;
+    width: 320px;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  input {
+    width: 100%;
+    padding: 12px 10px;
+    margin: 12px 0;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+  }
+  button {
+    background-color: #1a5eff;
+    border: none;
+    padding: 12px 0;
+    width: 100%;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #0033ff;
+  }
+  .link {
+    margin-top: 15px;
+    display: block;
+    color: #a0c4ff;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+</style>
 </head>
 <body>
-  <h1>Inscription sur TitiCraft</h1>
-  <input type="text" id="pseudo" placeholder="Pseudo" required />
-  <input type="email" id="email" placeholder="Adresse email" required />
-  <input type="password" id="password" placeholder="Mot de passe (min 6 caractères)" required />
-  <button onclick="register()">S'inscrire</button>
-  <p>Tu as déjà un compte ? <a href="login.html">Connexion</a></p>
+
+<div class="container">
+  <h1>Bienvenue sur TitiCraft</h1>
+  <input id="pseudo" type="text" placeholder="Pseudo" />
+  <input id="email" type="email" placeholder="Adresse email" />
+  <input id="password" type="password" placeholder="Mot de passe" />
+  <button id="registerBtn">S'inscrire</button>
+  <a href="login.html" class="link">Déjà un compte ? Se connecter</a>
+</div>
+
+<script type="module" src="register.js"></script>
 </body>
 </html>
 
