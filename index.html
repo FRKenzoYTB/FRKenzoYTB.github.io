@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Mini Chat</title>
+<title>Mini Chat Firebase</title>
 <style>
   body, html {
     height: 100%;
@@ -58,9 +58,63 @@
   </div>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
-  // Ici, on implémentera la logique JS pour envoyer et recevoir les messages via Firebase ou autre
+  // Ta config Firebase ici
+  const firebaseConfig = {
+    apiKey: "ton_api_key",
+    authDomain: "ton_projet.firebaseapp.com",
+    databaseURL: "https://ton_projet-default-rtdb.firebaseio.com",
+    projectId: "ton_projet",
+    storageBucket: "ton_projet.appspot.com",
+    messagingSenderId: "xxxxxxx",
+    appId: "x:xxxx:web:xxxxxx"
+  };
+
+  // Initialiser Firebase
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const messagesDiv = document.getElementById('messages');
+  const input = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // Fonction pour afficher un message
+  function displayMessage(text) {
+    const msgEl = document.createElement('div');
+    msgEl.textContent = text;
+    messagesDiv.appendChild(msgEl);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll en bas
+  }
+
+  // Envoyer un message
+  sendBtn.addEventListener('click', () => {
+    const text = input.value.trim();
+    if(text.length === 0) return;
+
+    // Push message dans Firebase
+    db.ref('messages').push({
+      text: text,
+      timestamp: Date.now()
+    });
+    input.value = '';
+  });
+
+  // Écouter les nouveaux messages en temps réel
+  db.ref('messages').limitToLast(50).on('child_added', (snapshot) => {
+    const msg = snapshot.val();
+    displayMessage(msg.text);
+  });
+
+  // Optionnel : envoyer avec la touche Entrée
+  input.addEventListener('keypress', (e) => {
+    if(e.key === 'Enter') sendBtn.click();
+  });
 </script>
 
 </body>
 </html>
+
