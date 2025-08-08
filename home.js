@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+import { getDatabase, ref, get, onValue, push, set } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
@@ -27,6 +27,9 @@ const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const messages = document.getElementById("messages");
 
+// Transactions container
+const transactionsList = document.getElementById("transactionsList");
+
 let currentUser = null;
 
 onAuthStateChanged(auth, (user) => {
@@ -39,10 +42,27 @@ onAuthStateChanged(auth, (user) => {
     // Récupérer diamants depuis la BDD
     const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
     get(diamondRef).then(snapshot => {
+      diamantCount.textContent = snapshot.exists() ? snapshot.val() : "0";
+    });
+
+    // Récupérer transactions en temps réel
+    const transactionsRef = ref(db, `transactions/${user.uid}`);
+    onValue(transactionsRef, (snapshot) => {
+      transactionsList.innerHTML = "";
       if (snapshot.exists()) {
-        diamantCount.textContent = snapshot.val();
+        const transactions = snapshot.val();
+        for (const id in transactions) {
+          const t = transactions[id];
+          const div = document.createElement("div");
+          if(t.type === "achat") {
+            div.textContent = `[-${t.diamants} Diamants] Vous avez acheté "${t.item}" sur "${t.serveur}"`;
+          } else if(t.type === "vente") {
+            div.textContent = `[+${t.diamants} Diamants] "${t.buyer}" vous a acheté ${t.quantité} ${t.item} sur le serveur "${t.serveur}"`;
+          }
+          transactionsList.appendChild(div);
+        }
       } else {
-        diamantCount.textContent = "0";
+        transactionsList.textContent = "Aucune transaction.";
       }
     });
   }
@@ -50,13 +70,11 @@ onAuthStateChanged(auth, (user) => {
 
 // Déconnexion
 logoutBtn.addEventListener("click", () => {
-  signOut(auth)
-    .then(() => {
-      window.location.href = "login.html";
-    })
-    .catch((error) => {
-      alert("Erreur lors de la déconnexion : " + error.message);
-    });
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  }).catch((error) => {
+    alert("Erreur lors de la déconnexion : " + error.message);
+  });
 });
 
 // Aller à la page paramètres
@@ -64,7 +82,7 @@ settingsBtn.addEventListener("click", () => {
   window.location.href = "settings.html";
 });
 
-// Chat basique - ajout local seulement (tu peux remplacer par un vrai chat Firebase si tu veux)
+// Chat basique local
 sendBtn.addEventListener("click", () => {
   const msg = chatInput.value.trim();
   if (msg === "") return;
@@ -74,3 +92,14 @@ sendBtn.addEventListener("click", () => {
   chatInput.value = "";
   messages.scrollTop = messages.scrollHeight;
 });
+
+/**
+ * Exemple fonction pour ajouter une transaction (achat ou vente) dans Firebase
+ * @param {string} userId - Id de l'utilisateur concerné
+ * @param {object} transactionData - Objet transaction { type, diamants, item, serveur, quantité, buyer (optionnel) }
+ */
+export function addTransaction(userId, transactionData) {
+  const transactionsRef = ref(db, `transactions/${userId}`);
+  const newTransactionRef = push(transactionsRef);
+  return set(newTransactionRef, transactionData);
+}
