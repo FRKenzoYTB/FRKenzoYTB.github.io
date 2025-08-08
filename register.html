@@ -1,78 +1,56 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TitiCraft - Inscription</title>
-<style>
-  body {
-    background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  .container {
-    background: rgba(0, 0, 30, 0.8);
-    padding: 30px 40px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #0011ffcc;
-    width: 320px;
-    text-align: center;
-  }
-  h1 {
-    margin-bottom: 20px;
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
-  input {
-    width: 100%;
-    padding: 12px 10px;
-    margin: 12px 0;
-    border-radius: 8px;
-    border: none;
-    font-size: 16px;
-  }
-  button {
-    background-color: #1a5eff;
-    border: none;
-    padding: 12px 0;
-    width: 100%;
-    color: white;
-    font-weight: 600;
-    font-size: 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background-color: #0033ff;
-  }
-  .link {
-    margin-top: 15px;
-    display: block;
-    color: #a0c4ff;
-    text-decoration: none;
-    font-size: 14px;
-  }
-  .link:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inscription - TitiCraft</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="container">
+    <h1>Créer un compte</h1>
+    <input type="text" id="pseudo" placeholder="Pseudo" />
+    <input type="email" id="email" placeholder="Adresse email" />
+    <input type="password" id="password" placeholder="Mot de passe" />
+    <button id="registerBtn">S'inscrire</button>
+    <a href="login.html">Déjà un compte ? Se connecter</a>
+  </div>
 
-<div class="container">
-  <h1>Bienvenue sur TitiCraft</h1>
-  <input id="pseudo" type="text" placeholder="Pseudo" />
-  <input id="email" type="email" placeholder="Adresse email" />
-  <input id="password" type="password" placeholder="Mot de passe" />
-  <button id="registerBtn">S'inscrire</button>
-  <a href="login.html" class="link">Déjà un compte ? Se connecter</a>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      // Ta config Firebase ici
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById('registerBtn').addEventListener('click', () => {
+      const pseudo = document.getElementById('pseudo').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      if (!pseudo || !email || !password) {
+        alert("Merci de remplir tous les champs");
+        return;
+      }
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          return updateProfile(userCredential.user, { displayName: pseudo });
+        })
+        .then(() => {
+          alert("Compte créé avec succès !");
+          window.location.href = "login.html";
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    });
+  </script>
+</body>
+</html>
 
 <script type="module" src="register.js"></script>
 </body>
