@@ -2,165 +2,178 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Titicraft - Connexion / Inscription</title>
+  <title>Titicraft - Chat & Connexion</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: 30px auto; padding: 10px; }
-    #home, #logoutBtn { display: none; }
-    form { margin-bottom: 20px; }
-    input { display: block; margin: 10px 0; padding: 8px; width: 100%; }
-    button { padding: 10px; width: 100%; cursor: pointer; }
-    #message { color: red; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #home, #register, #login { display: none; }
+    #messages { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
   <h1>Titicraft</h1>
 
-  <!-- Zone messages d'erreur ou succès -->
-  <div id="message"></div>
-
-  <!-- Formulaire inscription -->
-  <form id="registerForm">
+  <div id="register">
     <h2>Créer un compte</h2>
-    <input type="email" id="regEmail" placeholder="Email" required />
-    <input type="password" id="regPassword" placeholder="Mot de passe" required />
-    <input type="text" id="regPseudo" placeholder="Pseudo" required />
-    <button type="submit">S'inscrire</button>
-  </form>
+    <input type="text" id="regPseudo" placeholder="Pseudo" /><br/>
+    <input type="email" id="regEmail" placeholder="Email" /><br/>
+    <input type="password" id="regPass" placeholder="Mot de passe" /><br/>
+    <button onclick="register()">S'inscrire</button>
+    <p>Tu as déjà un compte ? <a href="#" onclick="showLogin()">Connexion</a></p>
+  </div>
 
-  <!-- Formulaire connexion -->
-  <form id="loginForm">
-    <h2>Se connecter</h2>
-    <input type="email" id="logEmail" placeholder="Email" required />
-    <input type="password" id="logPassword" placeholder="Mot de passe" required />
-    <button type="submit">Se connecter</button>
-  </form>
+  <div id="login">
+    <h2>Connexion</h2>
+    <input type="email" id="logEmail" placeholder="Email" /><br/>
+    <input type="password" id="logPass" placeholder="Mot de passe" /><br/>
+    <button onclick="login()">Se connecter</button>
+    <p>Pas encore inscrit ? <a href="#" onclick="showRegister()">Créer un compte</a></p>
+  </div>
 
-  <!-- Page d'accueil après connexion -->
   <div id="home">
     <h2>Bienvenue, <span id="userPseudo"></span> !</h2>
     <p>Diamants : <span id="userDiamonds">0</span></p>
-    <button id="logoutBtn">Déconnexion</button>
+    <div id="messages"></div>
+    <input type="text" id="msgInput" placeholder="Écris un message..." />
+    <button onclick="sendMessage()">Envoyer</button><br/>
+    <button onclick="logout()">Se déconnecter</button>
   </div>
 
+  <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getDatabase, ref, set, push, onChildAdded, get, child } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
-    // TA CONFIG FIREBASE ICI
+    // Configuration Firebase corrigée (storageBucket corrigé)
     const firebaseConfig = {
-      apiKey: "TA_CLE_API",
-      authDomain: "TON_PROJET.firebaseapp.com",
-      databaseURL: "https://TON_PROJET-default-rtdb.REGION.firebasedatabase.app",
-      projectId: "TON_PROJET",
-      storageBucket: "TON_PROJET.appspot.com",
-      messagingSenderId: "TON_ID",
-      appId: "TON_APP_ID",
-      measurementId: "TON_MEASUREMENT_ID"
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.appspot.com",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+      measurementId: "G-GW0GKGQ9EP"
     };
 
-    // Initialisation Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getDatabase(app);
 
-    // Elements DOM
-    const registerForm = document.getElementById('registerForm');
-    const loginForm = document.getElementById('loginForm');
-    const homeDiv = document.getElementById('home');
-    const messageDiv = document.getElementById('message');
-    const userPseudoSpan = document.getElementById('userPseudo');
-    const userDiamondsSpan = document.getElementById('userDiamonds');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    // Fonction afficher message
-    function showMessage(text, isError = true) {
-      messageDiv.textContent = text;
-      messageDiv.style.color = isError ? "red" : "green";
-      setTimeout(() => messageDiv.textContent = '', 5000);
+    // Affichage sections
+    function showRegister() {
+      document.getElementById("register").style.display = "block";
+      document.getElementById("login").style.display = "none";
+      document.getElementById("home").style.display = "none";
+    }
+    function showLogin() {
+      document.getElementById("register").style.display = "none";
+      document.getElementById("login").style.display = "block";
+      document.getElementById("home").style.display = "none";
+    }
+    function showHome() {
+      document.getElementById("register").style.display = "none";
+      document.getElementById("login").style.display = "none";
+      document.getElementById("home").style.display = "block";
     }
 
-    // Création compte
-    registerForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('regEmail').value;
-      const password = document.getElementById('regPassword').value;
-      const pseudo = document.getElementById('regPseudo').value;
-
-      createUserWithEmailAndPassword(auth, email, password)
-        .then(userCredential => {
-          const user = userCredential.user;
-          // Stocker profil dans DB
-          return set(ref(db, 'users/' + user.uid), {
-            pseudo: pseudo,
-            email: email,
-            diamonds: 0,
-            id: user.uid
-          });
-        })
-        .then(() => {
-          showMessage('Compte créé ! Connecte-toi maintenant.', false);
-          registerForm.reset();
-        })
-        .catch(error => {
-          showMessage(error.message);
+    // Enregistrement nouvel utilisateur
+    async function register() {
+      const email = document.getElementById("regEmail").value;
+      const pass = document.getElementById("regPass").value;
+      const pseudo = document.getElementById("regPseudo").value.trim();
+      if(!email || !pass || !pseudo) return alert("Remplis tous les champs !");
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const user = userCredential.user;
+        await updateProfile(user, { displayName: pseudo });
+        // Créer profil utilisateur dans la DB avec diamants = 0 et id aléatoire (uid)
+        await set(ref(db, 'users/' + user.uid), {
+          pseudo: pseudo,
+          email: email,
+          diamonds: 0
         });
-    });
+        alert("Compte créé !");
+      } catch(e) {
+        alert("Erreur : " + e.message);
+      }
+    }
 
-    // Connexion
-    loginForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const email = document.getElementById('logEmail').value;
-      const password = document.getElementById('logPassword').value;
-
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          loginForm.reset();
-          showMessage('Connecté !', false);
-        })
-        .catch(error => {
-          showMessage(error.message);
-        });
-    });
+    // Connexion utilisateur
+    async function login() {
+      const email = document.getElementById("logEmail").value;
+      const pass = document.getElementById("logPass").value;
+      if(!email || !pass) return alert("Remplis tous les champs !");
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch(e) {
+        alert("Erreur : " + e.message);
+      }
+    }
 
     // Déconnexion
-    logoutBtn.addEventListener('click', () => {
+    function logout() {
       signOut(auth);
-    });
+    }
 
-    // Surveille l’état de connexion
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        // Afficher home, masquer forms
-        registerForm.style.display = 'none';
-        loginForm.style.display = 'none';
-        homeDiv.style.display = 'block';
-        logoutBtn.style.display = 'block';
+    // Afficher messages dans la div #messages
+    function addMessage(data) {
+      const msg = data.val();
+      const div = document.createElement("div");
+      div.textContent = `${msg.pseudo} : ${msg.text}`;
+      document.getElementById("messages").appendChild(div);
+      document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+    }
 
-        // Récupérer données utilisateur et afficher
-        get(ref(db, 'users/' + user.uid)).then(snapshot => {
-          if (snapshot.exists()) {
-            const data = snapshot.val();
-            userPseudoSpan.textContent = data.pseudo || 'Anonyme';
-            userDiamondsSpan.textContent = data.diamonds ?? 0;
-          } else {
-            userPseudoSpan.textContent = 'Anonyme';
-            userDiamondsSpan.textContent = 0;
-          }
-        });
+    // Envoyer un message
+    async function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
+      if(!text) return;
+      const user = auth.currentUser;
+      if(!user) return alert("Connecte-toi d'abord !");
+      // On récupère le pseudo dans la DB
+      const userRef = ref(db, 'users/' + user.uid);
+      const snapshot = await get(userRef);
+      if(!snapshot.exists()) return alert("Profil utilisateur introuvable !");
+      const pseudo = snapshot.val().pseudo;
+      // On pousse le message dans la DB
+      await push(ref(db, 'messages'), {
+        uid: user.uid,
+        pseudo: pseudo,
+        text: text,
+        timestamp: Date.now()
+      });
+      input.value = "";
+    }
 
+    // Mise à jour UI quand connexion/déconnexion
+    onAuthStateChanged(auth, async (user) => {
+      if(user) {
+        showHome();
+        // Afficher pseudo
+        const userRef = ref(db, 'users/' + user.uid);
+        const snapshot = await get(userRef);
+        if(snapshot.exists()) {
+          const data = snapshot.val();
+          document.getElementById("userPseudo").textContent = data.pseudo;
+          document.getElementById("userDiamonds").textContent = data.diamonds;
+        }
+        // Charger messages
+        const messagesRef = ref(db, 'messages');
+        document.getElementById("messages").innerHTML = "";
+        onChildAdded(messagesRef, addMessage);
       } else {
-        // Pas connecté => montrer formulaire, cacher home
-        registerForm.style.display = 'block';
-        loginForm.style.display = 'block';
-        homeDiv.style.display = 'none';
-        logoutBtn.style.display = 'none';
-        userPseudoSpan.textContent = '';
-        userDiamondsSpan.textContent = 0;
+        showLogin();
       }
     });
+
+    // Démarrage : afficher login
+    showLogin();
+
   </script>
+
 </body>
 </html>
 
