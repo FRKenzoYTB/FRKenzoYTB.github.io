@@ -1,68 +1,102 @@
 /* style.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
 body {
-  background: linear-gradient(135deg, #4a90e2, #50e3c2);
+  margin: 0;
+  height: 100vh;
   font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
-  color: #fff;
+  color: white;
 }
 
 .container {
-  background: rgba(0,0,0,0.35);
-  padding: 40px 60px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  width: 350px;
+  background-color: rgba(0, 0, 0, 0.45);
+  padding: 50px 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  width: 360px;
   text-align: center;
+  position: relative;
 }
 
 h1 {
   margin-bottom: 30px;
-  font-weight: 600;
-  font-size: 2.2rem;
-  letter-spacing: 1px;
+  font-weight: 700;
+  font-size: 2.4rem;
+  letter-spacing: 1.2px;
 }
 
 input[type="text"],
 input[type="email"],
 input[type="password"] {
   width: 100%;
-  padding: 12px 15px;
-  margin: 15px 0;
+  padding: 15px 18px;
+  margin: 12px 0 20px 0;
+  border-radius: 12px;
   border: none;
-  border-radius: 8px;
   font-size: 1rem;
   outline: none;
+  box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #ccc;
 }
 
 button {
   width: 100%;
-  padding: 12px;
-  margin-top: 20px;
-  background-color: #50e3c2;
-  border: none;
-  border-radius: 8px;
+  padding: 15px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  background-color: #2575fc;
+  color: white;
   cursor: pointer;
-  color: #000;
   transition: background-color 0.3s ease;
+  margin-top: 10px;
 }
 
 button:hover {
-  background-color: #3bbba3;
+  background-color: #1a54c4;
 }
 
 a {
-  color: #d4f7f0;
-  text-decoration: none;
-  margin-top: 15px;
+  margin-top: 20px;
   display: inline-block;
+  color: #bbd4ff;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 a:hover {
+  color: #e0e9ff;
   text-decoration: underline;
+}
+
+/* Cercle point d'interrogation */
+.help-circle {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  background-color: #2575fc;
+  border-radius: 50%;
+  color: white;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 30px;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 0 8px rgba(37, 117, 252, 0.7);
+  transition: background-color 0.3s ease;
+}
+
+.help-circle:hover {
+  background-color: #1a54c4;
 }
