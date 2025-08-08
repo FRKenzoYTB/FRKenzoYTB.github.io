@@ -2,136 +2,165 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Chat Firebase</title>
+  <title>Titicraft - Connexion / Inscription</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-      justify-content: center;
-      align-items: center;
-      background: #222;
-      color: white;
-    }
-    #messages {
-      width: 80vw;
-      max-width: 600px;
-      height: 300px;
-      background: #333;
-      padding: 10px;
-      overflow-y: auto;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    #messages div {
-      background: #555;
-      padding: 6px 10px;
-      border-radius: 5px;
-      word-wrap: break-word;
-    }
-    form {
-      display: flex;
-      gap: 10px;
-      width: 80vw;
-      max-width: 600px;
-    }
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 8px;
-      border-radius: 5px;
-      border: none;
-      font-size: 1rem;
-    }
-    button {
-      padding: 8px 16px;
-      border-radius: 5px;
-      border: none;
-      background: #4CAF50;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    button:hover {
-      background: #45a049;
-    }
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 30px auto; padding: 10px; }
+    #home, #logoutBtn { display: none; }
+    form { margin-bottom: 20px; }
+    input { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+    button { padding: 10px; width: 100%; cursor: pointer; }
+    #message { color: red; }
   </style>
 </head>
 <body>
 
-  <div id="messages"></div>
+  <h1>Titicraft</h1>
 
-  <form id="form">
-    <input type="text" id="messageInput" placeholder="Écris un message..." autocomplete="off" />
-    <button type="submit">Envoyer</button>
+  <!-- Zone messages d'erreur ou succès -->
+  <div id="message"></div>
+
+  <!-- Formulaire inscription -->
+  <form id="registerForm">
+    <h2>Créer un compte</h2>
+    <input type="email" id="regEmail" placeholder="Email" required />
+    <input type="password" id="regPassword" placeholder="Mot de passe" required />
+    <input type="text" id="regPseudo" placeholder="Pseudo" required />
+    <button type="submit">S'inscrire</button>
   </form>
+
+  <!-- Formulaire connexion -->
+  <form id="loginForm">
+    <h2>Se connecter</h2>
+    <input type="email" id="logEmail" placeholder="Email" required />
+    <input type="password" id="logPassword" placeholder="Mot de passe" required />
+    <button type="submit">Se connecter</button>
+  </form>
+
+  <!-- Page d'accueil après connexion -->
+  <div id="home">
+    <h2>Bienvenue, <span id="userPseudo"></span> !</h2>
+    <p>Diamants : <span id="userDiamonds">0</span></p>
+    <button id="logoutBtn">Déconnexion</button>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-    import { getDatabase, ref, push, query, limitToLast, onChildAdded } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
+    // TA CONFIG FIREBASE ICI
     const firebaseConfig = {
-      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-      authDomain: "message-957c6.firebaseapp.com",
-      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "message-957c6",
-      storageBucket: "message-957c6.appspot.com",
-      messagingSenderId: "518720941529",
-      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-      measurementId: "G-GW0GKGQ9EP"
+      apiKey: "TA_CLE_API",
+      authDomain: "TON_PROJET.firebaseapp.com",
+      databaseURL: "https://TON_PROJET-default-rtdb.REGION.firebasedatabase.app",
+      projectId: "TON_PROJET",
+      storageBucket: "TON_PROJET.appspot.com",
+      messagingSenderId: "TON_ID",
+      appId: "TON_APP_ID",
+      measurementId: "TON_MEASUREMENT_ID"
     };
 
-    // Initialise Firebase
+    // Initialisation Firebase
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getDatabase(app);
 
-    const messagesRef = ref(db, 'messages');
-    const recentMessagesQuery = query(messagesRef, limitToLast(50));
+    // Elements DOM
+    const registerForm = document.getElementById('registerForm');
+    const loginForm = document.getElementById('loginForm');
+    const homeDiv = document.getElementById('home');
+    const messageDiv = document.getElementById('message');
+    const userPseudoSpan = document.getElementById('userPseudo');
+    const userDiamondsSpan = document.getElementById('userDiamonds');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-    const messagesDiv = document.getElementById('messages');
-    const form = document.getElementById('form');
-    const input = document.getElementById('messageInput');
-
-    // Affiche un message dans la div
-    function displayMessage(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      messagesDiv.appendChild(div);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight; // scroll vers le bas
+    // Fonction afficher message
+    function showMessage(text, isError = true) {
+      messageDiv.textContent = text;
+      messageDiv.style.color = isError ? "red" : "green";
+      setTimeout(() => messageDiv.textContent = '', 5000);
     }
 
-    // Ecoute les messages existants + nouveaux en temps réel
-    onChildAdded(recentMessagesQuery, (snapshot) => {
-      const msg = snapshot.val();
-      if(msg && msg.text) {
-        displayMessage(msg.text);
-      }
+    // Création compte
+    registerForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const pseudo = document.getElementById('regPseudo').value;
+
+      createUserWithEmailAndPassword(auth, email, password)
+        .then(userCredential => {
+          const user = userCredential.user;
+          // Stocker profil dans DB
+          return set(ref(db, 'users/' + user.uid), {
+            pseudo: pseudo,
+            email: email,
+            diamonds: 0,
+            id: user.uid
+          });
+        })
+        .then(() => {
+          showMessage('Compte créé ! Connecte-toi maintenant.', false);
+          registerForm.reset();
+        })
+        .catch(error => {
+          showMessage(error.message);
+        });
     });
 
-    // Envoie un message à Firebase quand on soumet le formulaire
-    form.addEventListener('submit', e => {
+    // Connexion
+    loginForm.addEventListener('submit', e => {
       e.preventDefault();
-      const text = input.value.trim();
-      if(text.length > 0) {
-        push(messagesRef, {
-          text: text,
-          timestamp: Date.now()
+      const email = document.getElementById('logEmail').value;
+      const password = document.getElementById('logPassword').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          loginForm.reset();
+          showMessage('Connecté !', false);
+        })
+        .catch(error => {
+          showMessage(error.message);
         });
-        input.value = '';
+    });
+
+    // Déconnexion
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth);
+    });
+
+    // Surveille l’état de connexion
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        // Afficher home, masquer forms
+        registerForm.style.display = 'none';
+        loginForm.style.display = 'none';
+        homeDiv.style.display = 'block';
+        logoutBtn.style.display = 'block';
+
+        // Récupérer données utilisateur et afficher
+        get(ref(db, 'users/' + user.uid)).then(snapshot => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            userPseudoSpan.textContent = data.pseudo || 'Anonyme';
+            userDiamondsSpan.textContent = data.diamonds ?? 0;
+          } else {
+            userPseudoSpan.textContent = 'Anonyme';
+            userDiamondsSpan.textContent = 0;
+          }
+        });
+
+      } else {
+        // Pas connecté => montrer formulaire, cacher home
+        registerForm.style.display = 'block';
+        loginForm.style.display = 'block';
+        homeDiv.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        userPseudoSpan.textContent = '';
+        userDiamondsSpan.textContent = 0;
       }
     });
   </script>
-
 </body>
 </html>
 
-</script>
-
-</body>
-</html>
