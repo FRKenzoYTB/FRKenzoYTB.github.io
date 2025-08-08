@@ -1,425 +1,150 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>EverFrost - Hub Minecraft</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #121212; color: #eee; }
-    header { background: #0b3a5a; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-    header h1 { margin: 0; }
-    .container { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem; }
-    .box { background: #1e1e1e; padding: 1rem; border-radius: 6px; flex: 1 1 300px; max-width: 600px; }
-    button { background: #0b3a5a; border: none; padding: 0.5rem 1rem; color: white; cursor: pointer; border-radius: 4px; }
-    input, select, textarea { width: 100%; padding: 0.5rem; margin: 0.3rem 0 0.8rem 0; border-radius: 4px; border: none; }
-    #messages, #transactions { max-height: 200px; overflow-y: auto; background: #222; padding: 0.5rem; border-radius: 4px; font-size: 0.9rem;}
-    h2 { border-bottom: 1px solid #0b3a5a; padding-bottom: 0.3rem; margin-top: 0; }
-    small { color: #888; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EverFrost - Accueil</title>
+<style>
+  /* Couleurs & style similaire à avant */
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #0a2239; /* bleu foncé */
+    color: #dbe9f4; /* texte clair */
+  }
+  header {
+    background-color: #08203c; /* bleu plus foncé */
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.5);
+  }
+  #logo {
+    font-weight: bold;
+    font-size: 1.8em;
+    color: #7fd1ff; /* bleu clair */
+    user-select: none;
+  }
+  #userPanel {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  #pseudoUser {
+    font-weight: 600;
+  }
+  #diamantCount {
+    font-weight: 700;
+    color: #66d3ff;
+  }
+  button {
+    background-color: #126fb2;
+    border: none;
+    border-radius: 4px;
+    color: #dbe9f4;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+  }
+  button:hover {
+    background-color: #4ea7e8;
+  }
+
+  main {
+    max-width: 900px;
+    margin: 20px auto;
+    background: #133a62; /* fond section */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgb(102 211 255 / 0.3);
+  }
+
+  h2, h3 {
+    color: #a7d4ff;
+    margin-top: 0;
+  }
+
+  /* Chat */
+  #chatContainer {
+    margin-top: 20px;
+  }
+  #messages {
+    height: 180px;
+    overflow-y: auto;
+    border: 1px solid #2c668d;
+    background: #0e2b53;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+  #chatInput {
+    width: calc(100% - 90px);
+    padding: 8px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    font-size: 1em;
+  }
+  #sendBtn {
+    width: 70px;
+    border-radius: 0 4px 4px 0;
+    font-weight: 700;
+  }
+
+  /* Transactions */
+  #transactionsList {
+    margin-top: 10px;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #2c668d;
+    background: #0e2b53;
+    padding: 15px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }
+  #transactionsList div {
+    margin-bottom: 8px;
+    padding: 6px;
+    background: #184d81;
+    border-radius: 4px;
+    color: #cbe6ff;
+  }
+
+</style>
 </head>
 <body>
 
 <header>
-  <h1>EverFrost</h1>
-  <div>
-    <span id="pseudoUser">Utilisateur</span> | <span>Diamants : <span id="diamantCount">0</span></span>
+  <div id="logo">EverFrost</div>
+  <div id="userPanel">
+    <div><strong id="pseudoUser">Utilisateur</strong> | <span>💎 <span id="diamantCount">0</span></span></div>
+    <button id="settingsBtn" title="Paramètres">⚙️</button>
     <button id="logoutBtn">Déconnexion</button>
-    <button id="settingsBtn">⚙️</button>
   </div>
 </header>
 
-<div class="container">
-
-  <!-- Serveurs Minecraft -->
-  <section class="box">
-    <h2>Serveurs Minecraft</h2>
-    <form id="serverForm">
-      <input type="text" id="serverAddress" placeholder="Adresse serveur Minecraft (ex: play.everfrost.fr)" required />
-      <button type="submit">Ajouter serveur</button>
-    </form>
-    <ul id="serverList"></ul>
-  </section>
+<main>
+  <h2>Bienvenue sur EverFrost !</h2>
 
   <!-- Chat -->
-  <section class="box">
-    <h2>Chat global</h2>
+  <section id="chatContainer">
+    <h3>Chat</h3>
     <div id="messages"></div>
-    <input type="text" id="chatInput" placeholder="Tapez un message..." />
-    <button id="sendBtn">Envoyer</button>
-  </section>
-
-  <!-- Annonces -->
-  <section class="box">
-    <h2>Annonces</h2>
-    <div id="annonces"></div>
-  </section>
-
-  <!-- Magasin / Entreprises -->
-  <section class="box">
-    <h2>Magasin & Entreprises</h2>
-
-    <!-- Création entreprise -->
-    <form id="createCompanyForm">
-      <input type="text" id="companyName" placeholder="Nom de l'entreprise" required />
-      <button type="submit">Créer entreprise</button>
-    </form>
-
-    <!-- Liste des entreprises et leurs articles -->
-    <div id="companiesList"></div>
+    <div style="display: flex; margin-top: 10px;">
+      <input id="chatInput" type="text" placeholder="Écrire un message..." autocomplete="off" />
+      <button id="sendBtn">Envoyer</button>
+    </div>
   </section>
 
   <!-- Transactions -->
-  <section class="box" style="max-width: 100%">
-    <h2>Historique des transactions</h2>
-    <div id="transactions"></div>
+  <section id="transactionsSection">
+    <h3>Transactions récentes</h3>
+    <div id="transactionsList">Chargement...</div>
   </section>
+</main>
 
-</div>
-
-<script type="module">
-// Imports Firebase (le tien, version 10.1.0)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-import { getDatabase, ref, get, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-  authDomain: "message-957c6.firebaseapp.com",
-  databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "message-957c6",
-  storageBucket: "message-957c6.appspot.com",
-  messagingSenderId: "518720941529",
-  appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-  measurementId: "G-GW0GKGQ9EP"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-
-const pseudoUser = document.getElementById("pseudoUser");
-const diamantCount = document.getElementById("diamantCount");
-const logoutBtn = document.getElementById("logoutBtn");
-const settingsBtn = document.getElementById("settingsBtn");
-
-// Serveurs
-const serverForm = document.getElementById("serverForm");
-const serverAddress = document.getElementById("serverAddress");
-const serverList = document.getElementById("serverList");
-
-// Chat
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const messages = document.getElementById("messages");
-
-// Annonces
-const annoncesDiv = document.getElementById("annonces");
-
-// Magasin/entreprises
-const createCompanyForm = document.getElementById("createCompanyForm");
-const companyNameInput = document.getElementById("companyName");
-const companiesList = document.getElementById("companiesList");
-
-// Transactions
-const transactionsDiv = document.getElementById("transactions");
-
-let currentUser = null;
-let currentDiamonds = 0;
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-  } else {
-    currentUser = user;
-    pseudoUser.textContent = user.displayName || "Utilisateur";
-
-    // Récup diamant ou initialiser à 20 si jamais
-    const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
-    const diamondSnap = await get(diamondRef);
-    if (!diamondSnap.exists()) {
-      await set(diamondRef, 20);
-      currentDiamonds = 20;
-    } else {
-      currentDiamonds = diamondSnap.val();
-    }
-    diamantCount.textContent = currentDiamonds;
-
-    // Charger serveurs et chat + annonces + entreprises + transactions
-    loadServers();
-    loadChat();
-    loadAnnonces();
-    loadCompanies();
-    loadTransactions();
-  }
-});
-
-// Logout
-logoutBtn.onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
-};
-settingsBtn.onclick = () => {
-  window.location.href = "settings.html";
-};
-
-// ========== Serveurs ==========
-
-serverForm.onsubmit = async (e) => {
-  e.preventDefault();
-  const addr = serverAddress.value.trim();
-  if (!addr) return alert("Adresse serveur invalide");
-  
-  // Sauvegarde serveur dans Firebase
-  const serversRef = ref(db, "servers");
-  const newServerRef = push(serversRef);
-  await set(newServerRef, { address: addr });
-  serverAddress.value = "";
-  loadServers();
-};
-
-function loadServers() {
-  const serversRef = ref(db, "servers");
-  serverList.innerHTML = "";
-  onValue(serversRef, (snapshot) => {
-    serverList.innerHTML = ""; // Reset
-    snapshot.forEach(child => {
-      const srv = child.val();
-      const li = document.createElement("li");
-      li.textContent = srv.address + " ";
-      const joinBtn = document.createElement("button");
-      joinBtn.textContent = "Rejoindre";
-      joinBtn.onclick = () => {
-        // Pour l'instant ouvre juste un lien (à adapter selon ta config)
-        window.open("minecraft://" + srv.address, "_blank");
-      };
-      li.appendChild(joinBtn);
-      serverList.appendChild(li);
-    });
-  });
-}
-
-// ========== Chat ==========
-
-sendBtn.onclick = async () => {
-  const msg = chatInput.value.trim();
-  if (!msg) return;
-  const chatRef = ref(db, "chat");
-  const newMsgRef = push(chatRef);
-  await set(newMsgRef, {
-    user: pseudoUser.textContent,
-    message: msg,
-    timestamp: Date.now()
-  });
-  chatInput.value = "";
-};
-
-function loadChat() {
-  const chatRef = ref(db, "chat");
-  onValue(chatRef, (snapshot) => {
-    messages.innerHTML = "";
-    snapshot.forEach(child => {
-      const m = child.val();
-      const div = document.createElement("div");
-      const date = new Date(m.timestamp);
-      div.textContent = `[${date.toLocaleTimeString()}] ${m.user} : ${m.message}`;
-      messages.appendChild(div);
-    });
-    messages.scrollTop = messages.scrollHeight;
-  });
-}
-
-// ========== Annonces (simple affichage) ==========
-
-function loadAnnonces() {
-  const annoncesRef = ref(db, "annonces");
-  onValue(annoncesRef, (snapshot) => {
-    annoncesDiv.innerHTML = "";
-    snapshot.forEach(child => {
-      const a = child.val();
-      const p = document.createElement("p");
-      p.textContent = a.text;
-      annoncesDiv.appendChild(p);
-    });
-  });
-}
-
-// ========== Magasin / Entreprises ==========
-
-createCompanyForm.onsubmit = async (e) => {
-  e.preventDefault();
-  const name = companyNameInput.value.trim();
-  if (!name) return alert("Nom d'entreprise requis");
-  const companiesRef = ref(db, "companies");
-  // On crée l'entreprise avec propriétaire + nom
-  const newCompanyRef = push(companiesRef);
-  await set(newCompanyRef, {
-    ownerId: currentUser.uid,
-    ownerName: pseudoUser.textContent,
-    name: name,
-    articles: {}
-  });
-  companyNameInput.value = "";
-  loadCompanies();
-};
-
-function loadCompanies() {
-  const companiesRef = ref(db, "companies");
-  companiesList.innerHTML = "";
-  onValue(companiesRef, (snapshot) => {
-    companiesList.innerHTML = ""; // reset
-    snapshot.forEach(companySnap => {
-      const company = companySnap.val();
-      const id = companySnap.key;
-      const div = document.createElement("div");
-      div.style.border = "1px solid #0b3a5a";
-      div.style.marginBottom = "1rem";
-      div.style.padding = "0.5rem";
-
-      const title = document.createElement("h3");
-      title.textContent = company.name + " (Propriétaire: " + company.ownerName + ")";
-      div.appendChild(title);
-
-      // Si propriétaire, formulaire ajout article
-      if (company.ownerId === currentUser.uid) {
-        const form = document.createElement("form");
-        form.innerHTML = `
-          <input type="text" name="title" placeholder="Titre de l'article" required />
-          <input type="number" name="price" placeholder="Prix en diamants" min="1" required />
-          <textarea name="desc" placeholder="Description (optionnelle)"></textarea>
-          <button type="submit">Ajouter article</button>
-        `;
-        form.onsubmit = async (e) => {
-          e.preventDefault();
-          const fdata = new FormData(form);
-          const artTitle = fdata.get("title").trim();
-          const artPrice = Number(fdata.get("price"));
-          const artDesc = fdata.get("desc").trim();
-
-          if (!artTitle || !artPrice || artPrice < 1) return alert("Titre et prix valides requis");
-
-          // Ajouter article en base dans cette entreprise
-          const articleRef = ref(db, `companies/${id}/articles`);
-          const newArticleRef = push(articleRef);
-          await set(newArticleRef, {
-            title: artTitle,
-            price: artPrice,
-            description: artDesc
-          });
-
-          form.reset();
-          loadCompanies();
-        };
-        div.appendChild(form);
-      }
-
-      // Liste articles
-      if (company.articles) {
-        const ul = document.createElement("ul");
-        Object.entries(company.articles).forEach(([artId, art]) => {
-          const li = document.createElement("li");
-          li.innerHTML = `<strong>${art.title}</strong> - ${art.price} 💎<br/><small>${art.description || ""}</small>`;
-          const buyBtn = document.createElement("button");
-          buyBtn.textContent = "Acheter";
-          buyBtn.onclick = () => buyArticle(id, artId, art);
-          li.appendChild(buyBtn);
-          ul.appendChild(li);
-        });
-        div.appendChild(ul);
-      }
-
-      companiesList.appendChild(div);
-    });
-  });
-}
-
-// ========== Acheter article ==========
-
-async function buyArticle(companyId, articleId, article) {
-  if (article.price > currentDiamonds) {
-    alert("Diamants insuffisants !");
-    return;
-  }
-
-  // Déduire diamants acheteur
-  const userDiamRef = ref(db, `users/${currentUser.uid}/diamonds`);
-  currentDiamonds -= article.price;
-  await set(userDiamRef, currentDiamonds);
-  diamantCount.textContent = currentDiamonds;
-
-  // Ajouter transaction acheteur ([-]) et vendeur ([+])
-  const transactionsRef = ref(db, "transactions");
-  const now = Date.now();
-
-  // Transaction pour acheteur
-  await push(transactionsRef, {
-    userId: currentUser.uid,
-    userName: pseudoUser.textContent,
-    type: "achat",
-    companyId: companyId,
-    articleTitle: article.title,
-    price: -article.price,
-    timestamp: now
-  });
-
-  // Récupérer ownerId vendeur
-  const companyOwnerRef = ref(db, `companies/${companyId}/ownerId`);
-  const ownerSnap = await get(companyOwnerRef);
-  const ownerId = ownerSnap.exists() ? ownerSnap.val() : null;
-
-  if (ownerId) {
-    // Ajouter diamants vendeur
-    const sellerDiamRef = ref(db, `users/${ownerId}/diamonds`);
-    const sellerSnap = await get(sellerDiamRef);
-    let sellerDiam = sellerSnap.exists() ? sellerSnap.val() : 0;
-    sellerDiam += article.price;
-    await set(sellerDiamRef, sellerDiam);
-
-    // Transaction vendeur
-    await push(transactionsRef, {
-      userId: ownerId,
-      userName: null,
-      type: "vente",
-      companyId: companyId,
-      articleTitle: article.title,
-      price: +article.price,
-      timestamp: now
-    });
-  }
-
-  alert(`Achat de "${article.title}" effectué !`);
-  loadTransactions();
-  loadCompanies();
-}
-
-// ========== Transactions ==========
-
-function loadTransactions() {
-  const transactionsRef = ref(db, "transactions");
-  transactionsDiv.innerHTML = "";
-
-  onValue(transactionsRef, (snapshot) => {
-    transactionsDiv.innerHTML = "";
-    snapshot.forEach(tx => {
-      const t = tx.val();
-      if (t.userId === currentUser.uid) {
-        const div = document.createElement("div");
-        const date = new Date(t.timestamp);
-        let txt = "";
-
-        if (t.type === "achat") {
-          txt = `[-${-t.price}] Vous avez acheté "${t.articleTitle}" sur "${t.companyId}"`;
-        } else if (t.type === "vente") {
-          txt = `[+${t.price}] Quelqu’un vous a acheté "${t.articleTitle}"`;
-        }
-
-        div.textContent = `[${date.toLocaleString()}] ${txt}`;
-        transactionsDiv.appendChild(div);
-      }
-    });
-  });
-}
-
-</script>
+<script type="module" src="home.js"></script>
 
 </body>
 </html>
