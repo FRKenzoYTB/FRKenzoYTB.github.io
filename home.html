@@ -19,27 +19,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: relative;
     }
-    #userInfo {
+    #pseudoUser {
       font-weight: bold;
       font-size: 1.2rem;
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-    #settingsBtn {
-      font-size: 1.5rem;
-      cursor: pointer;
-      user-select: none;
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-      background: #61dafb;
-      color: black;
-      transition: background 0.3s ease;
-    }
-    #settingsBtn:hover {
-      background: #21a1f1;
-      color: white;
     }
     #logoutBtn {
       background: #61dafb;
@@ -56,56 +40,119 @@
       background: #21a1f1;
       color: white;
     }
+    #diamants {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    #diamants img {
+      width: 24px;
+      height: 24px;
+    }
+    #settingsBtn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      filter: invert(1);
+    }
     main {
       flex: 1;
       display: flex;
       flex-direction: column;
       padding: 1rem 2rem;
       box-sizing: border-box;
-      gap: 1rem;
     }
-    .menu-button {
-      background: #3a3f4b;
-      border: none;
-      padding: 1rem;
+    #chatBox {
+      flex: 1;
+      background: #1e222a;
       border-radius: 10px;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      width: 200px;
+      padding: 1rem;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
     }
-    .menu-button:hover {
-      background: #61dafb;
+    .message {
+      margin-bottom: 0.8rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 5px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+    .message .pseudo {
+      font-weight: bold;
+      margin-right: 0.6rem;
+    }
+    .message.own {
+      background-color: #61dafb;
       color: black;
+      align-self: flex-end;
     }
-    .btn-container {
+    .message.other {
+      background-color: #3a3f4b;
+      color: white;
+      align-self: flex-start;
+    }
+    #msgForm {
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    #msgInput {
+      flex: 1;
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    #msgSendBtn {
+      padding: 0.8rem 1.2rem;
+      background: #61dafb;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: black;
+      transition: background 0.3s ease;
+    }
+    #msgSendBtn:hover {
+      background: #21a1f1;
+      color: white;
     }
   </style>
 </head>
 <body>
   <header>
-    <div id="userInfo">
-      <span id="pseudoUser">Chargement...</span>
-      <span id="diamondsDisplay">💎 0</span>
-      <div id="settingsBtn" title="Paramètres">⚙️</div>
-      <button id="logoutBtn">Se déconnecter</button>
+    <div id="pseudoUser">Utilisateur</div>
+    <div id="diamants">
+      <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Diamant" />
+      <span id="diamantCount">10</span>
     </div>
+    <button id="logoutBtn">Se déconnecter</button>
+    <button id="settingsBtn" title="Paramètres">
+      ⚙️
+    </button>
   </header>
 
   <main>
-    <button id="soloBtn" class="menu-button">Mode Solo</button>
-    <button id="multiBtn" class="menu-button">Multijoueur</button>
-    <button id="creditsBtn" class="menu-button">Crédits</button>
+    <div id="chatBox"></div>
+
+    <form id="msgForm">
+      <input type="text" id="msgInput" placeholder="Écris un message..." autocomplete="off" required />
+      <button type="submit" id="msgSendBtn">Envoyer</button>
+    </form>
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
@@ -123,44 +170,86 @@
     const db = getDatabase(app);
 
     const pseudoUser = document.getElementById("pseudoUser");
-    const diamondsDisplay = document.getElementById("diamondsDisplay");
     const logoutBtn = document.getElementById("logoutBtn");
+    const chatBox = document.getElementById("chatBox");
+    const msgForm = document.getElementById("msgForm");
+    const msgInput = document.getElementById("msgInput");
+    const diamantCount = document.getElementById("diamantCount");
     const settingsBtn = document.getElementById("settingsBtn");
 
-    const soloBtn = document.getElementById("soloBtn");
-    const multiBtn = document.getElementById("multiBtn");
-    const creditsBtn = document.getElementById("creditsBtn");
+    let currentUser = null;
 
-    onAuthStateChanged(auth, (user) => {
+    // Vérifier connexion
+    onAuthStateChanged(auth, user => {
       if (!user) {
         window.location.href = "login.html";
-      } else {
-        pseudoUser.textContent = user.displayName || "Anonyme";
-        const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
-        get(diamondRef).then(snapshot => {
-          if (snapshot.exists()) {
-            diamondsDisplay.textContent = `💎 ${snapshot.val()}`;
-          } else {
-            diamondsDisplay.textContent = "💎 0";
-          }
-        });
+        return;
       }
+      currentUser = user;
+      pseudoUser.textContent = user.displayName || "Anonyme";
+
+      // Exemple : récupérer le nombre de diamants (à adapter selon ta DB)
+      // Ici on simule un fetch (tu dois adapter ça à ta base)
+      // Exemple simple statique:
+      diamantCount.textContent = "10";
+
+      listenMessages();
     });
 
-    settingsBtn.addEventListener("click", () => {
-      window.location.href = "settings.html";
+    // Écouter messages
+    function listenMessages() {
+      const messagesRef = ref(db, "messages");
+      onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(msg.uid === currentUser.uid ? "own" : "other");
+        div.innerHTML = `<span class="pseudo">${escapeHtml(msg.pseudo)}:</span> ${escapeHtml(msg.text)}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    // Sécurité HTML
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Envoyer message
+    msgForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = msgInput.value.trim();
+      if (!text) return;
+
+      const messagesRef = ref(db, "messages");
+      push(messagesRef, {
+        uid: currentUser.uid,
+        pseudo: currentUser.displayName || "Anonyme",
+        text: text,
+        timestamp: serverTimestamp()
+      });
+
+      msgInput.value = "";
     });
 
+    // Déconnexion
     logoutBtn.addEventListener("click", () => {
       signOut(auth).then(() => {
         window.location.href = "login.html";
       });
     });
 
-    soloBtn.addEventListener("click", () => alert("Mode solo bientôt disponible !"));
-    multiBtn.addEventListener("click", () => alert("Mode multijoueur bientôt disponible !"));
-    creditsBtn.addEventListener("click", () => alert("Crédits : Développé par Kenzo_0025"));
+    // Bouton paramètres (exemple : alert, à remplacer par ta logique)
+    settingsBtn.addEventListener("click", () => {
+      alert("Accès aux paramètres (à coder) !");
+    });
   </script>
 </body>
 </html>
-
