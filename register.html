@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>EverFrost - Créer un compte</title>
+  <title>EverFrost - S'inscrire</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -12,143 +12,133 @@
       height: 100vh;
       margin: 0;
     }
-    .container {
-      text-align: center;
-      width: 320px;
-      background: #3a3f4b;
-      padding: 2.5rem 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(33, 161, 241, 0.7);
-      position: relative;
-    }
     h1 {
       font-size: 2.5rem;
-      margin-bottom: 2rem;
-      color: #61dafb;
-    }
-    label {
-      display: block;
-      text-align: left;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-      color: #aad4ff;
-    }
-    input[type="text"], input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 0.7rem 1rem;
       margin-bottom: 1.5rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      background: #20252e;
-      color: white;
-      outline: none;
-      box-sizing: border-box;
-      transition: background 0.3s ease;
     }
-    input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
-      background: #2a2f3b;
-      box-shadow: 0 0 8px #61dafb;
+    form {
+      display: flex;
+      flex-direction: column;
+      background: #3a3f4b;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 320px;
+      box-shadow: 0 0 15px #61dafb;
+    }
+    input {
+      background: #22272e;
+      border: none;
+      padding: 0.8rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+    input::placeholder {
+      color: #888;
     }
     button {
-      width: 100%;
-      padding: 1rem;
       background: #61dafb;
+      color: black;
       border: none;
-      border-radius: 12px;
-      font-size: 1.2rem;
+      padding: 1rem;
+      border-radius: 10px;
       font-weight: bold;
-      color: #282c34;
+      font-size: 1.2rem;
       cursor: pointer;
       transition: background 0.3s ease;
-      letter-spacing: 0.05em;
     }
     button:hover {
       background: #21a1f1;
       color: white;
     }
-    .help-circle {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #61dafb;
-      color: #282c34;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-weight: 700;
-      font-size: 22px;
-      line-height: 32px;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 0 8px #61dafb;
-    }
-    .help-message {
-      display: none;
-      background: #20252e;
-      color: #aad4ff;
-      padding: 1rem;
-      border-radius: 8px;
+    .info {
+      margin-top: 1rem;
       font-size: 0.9rem;
-      margin-top: 0.5rem;
+      color: #ccc;
       text-align: center;
     }
-    .help-circle.active + .help-message {
-      display: block;
-    }
-    .bottom-text {
-      margin-top: 1.5rem;
-      font-size: 0.95rem;
-      color: #aad4ff;
-    }
-    .bottom-text a {
+    a {
       color: #61dafb;
       text-decoration: none;
-      font-weight: 600;
-      transition: color 0.3s ease;
+      font-weight: bold;
     }
-    .bottom-text a:hover {
-      color: #21a1f1;
+    a:hover {
       text-decoration: underline;
     }
+    .error {
+      color: #ff6b6b;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
   </style>
-</head>
-<body>
-  <div class="container">
-    <div class="help-circle" id="helpBtn">?</div>
-    <div class="help-message" id="helpMsg">Si vous avez perdu votre mot de passe, demandez à Kenzo.</div>
-    
-    <h1>Créer un compte</h1>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
 
-    <form id="registerForm">
-      <label for="pseudo">Pseudo</label>
-      <input type="text" id="pseudo" required placeholder="Ton pseudo" />
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.appspot.com",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+      measurementId: "G-GW0GKGQ9EP"
+    };
 
-      <label for="email">Adresse e-mail</label>
-      <input type="email" id="email" required placeholder="exemple@exemple.com" />
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-      <label for="password">Mot de passe</label>
-      <input type="password" id="password" required placeholder="••••••••" />
+    window.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('registerForm');
+      const errorDiv = document.getElementById('error');
 
-      <button type="submit">S'inscrire</button>
-    </form>
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorDiv.textContent = '';
+        const pseudo = form.pseudo.value.trim();
+        const email = form.email.value.trim();
+        const password = form.password.value;
 
-    <div class="bottom-text">
-      Déjà inscrit ? <a href="login.html">Se connecter</a>
-    </div>
-  </div>
+        if (pseudo.length < 3) {
+          errorDiv.textContent = "Le pseudo doit contenir au moins 3 caractères.";
+          return;
+        }
+        if (!email.includes('@')) {
+          errorDiv.textContent = "L'adresse email n'est pas valide.";
+          return;
+        }
+        if (password.length < 6) {
+          errorDiv.textContent = "Le mot de passe doit contenir au moins 6 caractères.";
+          return;
+        }
 
-  <script>
-    const helpBtn = document.getElementById('helpBtn');
-    helpBtn.addEventListener('click', () => {
-      helpBtn.classList.toggle('active');
-    });
-
-    document.getElementById('registerForm').addEventListener('submit', e => {
-      e.preventDefault();
-      // Ici tu peux intégrer l'inscription Firebase
-      alert("Inscription en cours... (à implémenter)");
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(userCredential.user, { displayName: pseudo });
+          // redirige vers home.html après inscription
+          window.location.href = 'home.html';
+        } catch (error) {
+          if(error.code === 'auth/email-already-in-use') {
+            errorDiv.textContent = "Cette adresse email est déjà utilisée.";
+          } else {
+            errorDiv.textContent = error.message;
+          }
+        }
+      });
     });
   </script>
+</head>
+<body>
+  <h1>Créer un compte EverFrost</h1>
+  <form id="registerForm">
+    <input type="text" name="pseudo" placeholder="Pseudo" required minlength="3" />
+    <input type="email" name="email" placeholder="Adresse email" required />
+    <input type="password" name="password" placeholder="Mot de passe" required minlength="6" />
+    <div id="error" class="error"></div>
+    <button type="submit">S'inscrire</button>
+  </form>
+  <div class="info">Déjà un compte ? <a href="login.html">Se connecter</a></div>
 </body>
 </html>
