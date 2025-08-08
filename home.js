@@ -1,6 +1,5 @@
-// home.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
 import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -14,31 +13,36 @@ const firebaseConfig = {
   measurementId: "G-GW0GKGQ9EP"
 };
 
-// Initialisation Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-const welcomeMsg = document.getElementById("welcomeMsg");
-const diamondCount = document.getElementById("diamondCount");
+const pseudoUser = document.getElementById("pseudoUser");
+const diamantCount = document.getElementById("diamantCount");
 const logoutBtn = document.getElementById("logoutBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 
-// Vérifie si l'utilisateur est connecté
+// Chat elements
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+const messages = document.getElementById("messages");
+
+let currentUser = null;
+
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "login.html";
   } else {
-    // Affiche son pseudo ou email
-    welcomeMsg.textContent = `Bienvenue ${user.displayName || user.email} !`;
+    currentUser = user;
+    pseudoUser.textContent = user.displayName || "Utilisateur";
 
-    // Récupère les diamants depuis Firebase Realtime Database
-    const userRef = ref(db, "users/" + user.uid + "/diamonds");
-    get(userRef).then(snapshot => {
+    // Récupérer diamants depuis la BDD
+    const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
+    get(diamondRef).then(snapshot => {
       if (snapshot.exists()) {
-        diamondCount.textContent = snapshot.val();
+        diamantCount.textContent = snapshot.val();
       } else {
-        diamondCount.textContent = "0";
+        diamantCount.textContent = "0";
       }
     });
   }
@@ -46,13 +50,27 @@ onAuthStateChanged(auth, (user) => {
 
 // Déconnexion
 logoutBtn.addEventListener("click", () => {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
+  signOut(auth)
+    .then(() => {
+      window.location.href = "login.html";
+    })
+    .catch((error) => {
+      alert("Erreur lors de la déconnexion : " + error.message);
+    });
 });
 
-// Bouton paramètres
+// Aller à la page paramètres
 settingsBtn.addEventListener("click", () => {
   window.location.href = "settings.html";
 });
 
+// Chat basique - ajout local seulement (tu peux remplacer par un vrai chat Firebase si tu veux)
+sendBtn.addEventListener("click", () => {
+  const msg = chatInput.value.trim();
+  if (msg === "") return;
+  const msgElem = document.createElement("div");
+  msgElem.textContent = `${pseudoUser.textContent} : ${msg}`;
+  messages.appendChild(msgElem);
+  chatInput.value = "";
+  messages.scrollTop = messages.scrollHeight;
+});
