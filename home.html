@@ -5,25 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>EverFrost - Accueil</title>
 <style>
-  /* Couleurs & style similaire à avant */
   body {
-    margin: 0;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: #0a2239; /* bleu foncé */
-    color: #dbe9f4; /* texte clair */
+    margin: 0; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #0a2239;
+    color: #dbe9f4;
+    display: flex;
+    height: 100vh;
   }
   header {
-    background-color: #08203c; /* bleu plus foncé */
-    padding: 10px 20px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 50px;
+    background-color: #08203c;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 20px;
     box-shadow: 0 3px 8px rgb(0 0 0 / 0.5);
+    z-index: 10;
   }
   #logo {
     font-weight: bold;
-    font-size: 1.8em;
-    color: #7fd1ff; /* bleu clair */
+    font-size: 1.5em;
+    color: #7fd1ff;
     user-select: none;
   }
   #userPanel {
@@ -31,13 +35,8 @@
     align-items: center;
     gap: 15px;
   }
-  #pseudoUser {
-    font-weight: 600;
-  }
-  #diamantCount {
-    font-weight: 700;
-    color: #66d3ff;
-  }
+  #pseudoUser { font-weight: 600; }
+  #diamantCount { font-weight: 700; color: #66d3ff; }
   button {
     background-color: #126fb2;
     border: none;
@@ -48,29 +47,46 @@
     cursor: pointer;
     transition: background-color 0.25s ease;
   }
-  button:hover {
-    background-color: #4ea7e8;
-  }
+  button:hover { background-color: #4ea7e8; }
 
-  main {
-    max-width: 900px;
-    margin: 20px auto;
-    background: #133a62; /* fond section */
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgb(102 211 255 / 0.3);
+  /* Side menu */
+  #sideMenu {
+    margin-top: 50px;
+    width: 220px;
+    background: #08203c;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
   }
-
-  h2, h3 {
-    color: #a7d4ff;
+  #sideMenu h3 {
     margin-top: 0;
+    color: #7fd1ff;
+    margin-bottom: 10px;
+  }
+  #serversList button {
+    width: 100%;
+    margin-bottom: 8px;
+    background-color: #126fb2;
+  }
+
+  /* Content area */
+  #contentArea {
+    margin-top: 50px;
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  /* Sections hidden by default */
+  .section {
+    display: none;
+  }
+  .section.active {
+    display: block;
   }
 
   /* Chat */
-  #chatContainer {
-    margin-top: 20px;
-  }
-  #messages {
+  #chatMessages {
     height: 180px;
     overflow-y: auto;
     border: 1px solid #2c668d;
@@ -78,6 +94,7 @@
     padding: 10px;
     border-radius: 6px;
     font-size: 0.9em;
+    margin-bottom: 10px;
   }
   #chatInput {
     width: calc(100% - 90px);
@@ -86,31 +103,29 @@
     border-radius: 4px 0 0 4px;
     font-size: 1em;
   }
-  #sendBtn {
+  #sendChatBtn {
     width: 70px;
     border-radius: 0 4px 4px 0;
     font-weight: 700;
   }
 
-  /* Transactions */
+  /* Transactions globales */
   #transactionsList {
-    margin-top: 10px;
-    max-height: 220px;
+    max-height: 150px;
     overflow-y: auto;
     border: 1px solid #2c668d;
     background: #0e2b53;
     padding: 15px;
     border-radius: 6px;
     font-size: 0.9em;
+    color: #cbe6ff;
   }
   #transactionsList div {
     margin-bottom: 8px;
     padding: 6px;
     background: #184d81;
     border-radius: 4px;
-    color: #cbe6ff;
   }
-
 </style>
 </head>
 <body>
@@ -118,33 +133,84 @@
 <header>
   <div id="logo">EverFrost</div>
   <div id="userPanel">
-    <div><strong id="pseudoUser">Utilisateur</strong> | <span>💎 <span id="diamantCount">0</span></span></div>
+    <div><strong id="pseudoUser">Utilisateur</strong> | 💎 <span id="diamantCount">0</span></div>
     <button id="settingsBtn" title="Paramètres">⚙️</button>
     <button id="logoutBtn">Déconnexion</button>
   </div>
 </header>
 
-<main>
-  <h2>Bienvenue sur EverFrost !</h2>
+<div id="sideMenu" style="margin-top:50px;">
+  <h3>Mes serveurs</h3>
+  <div id="serversList">
+    <!-- Boutons des serveurs vont ici -->
+  </div>
+</div>
 
-  <!-- Chat -->
-  <section id="chatContainer">
-    <h3>Chat</h3>
-    <div id="messages"></div>
-    <div style="display: flex; margin-top: 10px;">
+<div id="contentArea">
+  <!-- Section Chat serveur -->
+  <section id="chatSection" class="section">
+    <h3>Chat du serveur <span id="currentServerName"></span></h3>
+    <div id="chatMessages"></div>
+    <div style="display:flex; margin-top:10px;">
       <input id="chatInput" type="text" placeholder="Écrire un message..." autocomplete="off" />
-      <button id="sendBtn">Envoyer</button>
+      <button id="sendChatBtn">Envoyer</button>
     </div>
   </section>
 
-  <!-- Transactions -->
-  <section id="transactionsSection">
-    <h3>Transactions récentes</h3>
+  <!-- Section Shop serveur -->
+  <section id="shopSection" class="section">
+    <h3>Boutique du serveur <span id="currentServerNameShop"></span></h3>
+    <div id="enterprisesList">Chargement des entreprises...</div>
+  </section>
+
+  <!-- Section Transactions globales -->
+  <section id="transactionsSection" style="margin-top: 20px;">
+    <h3>Transactions récentes (Global)</h3>
     <div id="transactionsList">Chargement...</div>
   </section>
-</main>
+</div>
 
 <script type="module" src="home.js"></script>
+<script>
+  // Exemple basique pour gérer la navigation entre serveurs
+  const servers = [
+    { id: "titicraft", name: "Titicraft" },
+    { id: "serveurtropcool", name: "ServeurTropCool" },
+    // ajoute tes serveurs ici
+  ];
+
+  const serversList = document.getElementById("serversList");
+  const chatSection = document.getElementById("chatSection");
+  const shopSection = document.getElementById("shopSection");
+  const currentServerName = document.getElementById("currentServerName");
+  const currentServerNameShop = document.getElementById("currentServerNameShop");
+
+  function hideAllSections() {
+    chatSection.classList.remove("active");
+    shopSection.classList.remove("active");
+  }
+
+  // Crée les boutons serveurs dans le menu latéral
+  servers.forEach(server => {
+    const btn = document.createElement("button");
+    btn.textContent = server.name;
+    btn.addEventListener("click", () => {
+      hideAllSections();
+      // Par défaut on affiche chat
+      chatSection.classList.add("active");
+      currentServerName.textContent = server.name;
+      currentServerNameShop.textContent = server.name;
+      // TODO : charger chat et shop pour ce serveur
+    });
+    serversList.appendChild(btn);
+  });
+
+  // Au chargement, sélectionne le premier serveur
+  if(servers.length > 0) {
+    serversList.querySelector("button").click();
+  }
+</script>
 
 </body>
 </html>
+
