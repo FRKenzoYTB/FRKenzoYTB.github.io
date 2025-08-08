@@ -9,6 +9,9 @@
 <body>
   <div class="container">
     <h1>Se connecter</h1>
+
+    <div class="help-circle" id="help">?</div>
+
     <input type="email" id="email" placeholder="Adresse email" />
     <input type="password" id="password" placeholder="Mot de passe" />
     <button id="loginBtn">Se connecter</button>
@@ -20,7 +23,7 @@
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
     const firebaseConfig = {
-      // Ta config Firebase ici
+      // ta config Firebase ici
     };
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -30,7 +33,7 @@
       const password = document.getElementById('password').value.trim();
 
       if (!email || !password) {
-        alert("Merci de remplir tous les champs");
+        alert("Merci de remplir tous les champs.");
         return;
       }
 
@@ -38,16 +41,20 @@
         .then(() => {
           window.location.href = "home.html";
         })
-        .catch((error) => {
-          alert("Email ou mot de passe incorrect");
+        .catch(() => {
+          alert("Email ou mot de passe incorrect.");
         });
     });
 
-    // Si déjà connecté, rediriger automatiquement
     onAuthStateChanged(auth, (user) => {
       if (user) {
         window.location.href = "home.html";
       }
+    });
+
+    // Help message quand on clique sur ?
+    document.getElementById('help').addEventListener('click', () => {
+      alert("Si vous avez perdu votre mot de passe ou rencontré un problème, contactez Kenzo.");
     });
   </script>
 </body>
