@@ -1,78 +1,67 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TitiCraft - Connexion</title>
-<style>
-  body {
-    background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #fff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  .container {
-    background: rgba(0, 0, 30, 0.8);
-    padding: 30px 40px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #0011ffcc;
-    width: 320px;
-    text-align: center;
-  }
-  h1 {
-    margin-bottom: 20px;
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
-  input {
-    width: 100%;
-    padding: 12px 10px;
-    margin: 12px 0;
-    border-radius: 8px;
-    border: none;
-    font-size: 16px;
-  }
-  button {
-    background-color: #1a5eff;
-    border: none;
-    padding: 12px 0;
-    width: 100%;
-    color: white;
-    font-weight: 600;
-    font-size: 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  button:hover {
-    background-color: #0033ff;
-  }
-  .link {
-    margin-top: 15px;
-    display: block;
-    color: #a0c4ff;
-    text-decoration: none;
-    font-size: 14px;
-  }
-  .link:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TitiCraft - Connexion</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="container">
+    <h1>Connexion</h1>
+    <div id="error" class="error-message"></div>
+    <input type="email" id="email" placeholder="Adresse email" required />
+    <input type="password" id="password" placeholder="Mot de passe" required />
+    <button id="loginBtn">Se connecter</button>
+    <a href="register.html" class="link">Pas encore de compte ? S'inscrire</a>
+  </div>
 
-<div class="container">
-  <h1>Connexion TitiCraft</h1>
-  <input id="email" type="email" placeholder="Adresse email" />
-  <input id="password" type="password" placeholder="Mot de passe" />
-  <button id="loginBtn">Se connecter</button>
-  <a href="register.html" class="link">Pas encore de compte ? S'inscrire</a>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-<script type="module" src="login.js"></script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.appspot.com",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+      measurementId: "G-GW0GKGQ9EP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const errorDiv = document.getElementById('error');
+    const loginBtn = document.getElementById('loginBtn');
+
+    loginBtn.addEventListener('click', () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      errorDiv.textContent = '';
+
+      if (!email || !password) {
+        errorDiv.textContent = "Tous les champs sont obligatoires.";
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = 'home.html';
+        })
+        .catch(error => {
+          if (error.code === 'auth/user-not-found') {
+            errorDiv.textContent = 'Utilisateur non trouvé.';
+          } else if (error.code === 'auth/wrong-password') {
+            errorDiv.textContent = 'Mot de passe incorrect.';
+          } else {
+            errorDiv.textContent = error.message;
+          }
+        });
+    });
+  </script>
 </body>
 </html>
