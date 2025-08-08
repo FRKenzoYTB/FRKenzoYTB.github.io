@@ -17,13 +17,43 @@
       background: #3a3f4b;
       padding: 1rem 2rem;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end; /* boutons à droite */
       align-items: center;
       position: relative;
+      gap: 10px;
     }
     #pseudoUser {
+      position: absolute;
+      left: 2rem;
       font-weight: bold;
       font-size: 1.2rem;
+    }
+    #diamants {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    #diamants img {
+      width: 24px;
+      height: 24px;
+      user-select: none;
+    }
+    #settingsBtn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      filter: invert(1);
+      font-size: 24px;
+      line-height: 36px;
+      padding: 0;
+      margin-right: 0;
+    }
+    #settingsBtn:hover {
+      filter: invert(0.7);
     }
     #logoutBtn {
       background: #61dafb;
@@ -34,34 +64,10 @@
       font-weight: bold;
       color: black;
       transition: background 0.3s ease;
-      margin-left: 1rem;
     }
     #logoutBtn:hover {
       background: #21a1f1;
       color: white;
-    }
-    #diamants {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-weight: 700;
-      font-size: 1.2rem;
-    }
-    #diamants img {
-      width: 24px;
-      height: 24px;
-    }
-    #settingsBtn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      width: 30px;
-      height: 30px;
-      filter: invert(1);
     }
     main {
       flex: 1;
@@ -77,7 +83,6 @@
       padding: 1rem;
       overflow-y: auto;
       margin-bottom: 1rem;
-      font-size: 0.9rem;
     }
     .message {
       margin-bottom: 0.8rem;
@@ -130,14 +135,14 @@
 <body>
   <header>
     <div id="pseudoUser">Utilisateur</div>
-    <div id="diamants">
-      <img src="https://cdn-icons-png.flaticon.com/512/833/833472.png" alt="Diamant" />
+
+    <div id="diamants" title="Diamants">
+      <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Diamant" />
       <span id="diamantCount">10</span>
     </div>
+
+    <button id="settingsBtn" title="Paramètres" aria-label="Paramètres">⚙️</button>
     <button id="logoutBtn">Se déconnecter</button>
-    <button id="settingsBtn" title="Paramètres">
-      ⚙️
-    </button>
   </header>
 
   <main>
@@ -154,6 +159,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
     import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
 
+    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
       authDomain: "message-957c6.firebaseapp.com",
@@ -188,9 +194,7 @@
       currentUser = user;
       pseudoUser.textContent = user.displayName || "Anonyme";
 
-      // Exemple : récupérer le nombre de diamants (à adapter selon ta DB)
-      // Ici on simule un fetch (tu dois adapter ça à ta base)
-      // Exemple simple statique:
+      // Afficher diamants fictifs (à remplacer par une vraie source si besoin)
       diamantCount.textContent = "10";
 
       listenMessages();
@@ -199,6 +203,7 @@
     // Écouter messages
     function listenMessages() {
       const messagesRef = ref(db, "messages");
+
       onChildAdded(messagesRef, (snapshot) => {
         const msg = snapshot.val();
         const div = document.createElement("div");
@@ -246,10 +251,11 @@
       });
     });
 
-    // Bouton paramètres (exemple : alert, à remplacer par ta logique)
+    // Action bouton paramètres
     settingsBtn.addEventListener("click", () => {
-      alert("Accès aux paramètres (à coder) !");
+      alert("Ouverture des paramètres (à implémenter)");
     });
   </script>
 </body>
 </html>
+
