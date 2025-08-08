@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Mini Chat</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+  }
+  #chat {
+    width: 300px;
+    height: 400px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+  #messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ccc;
+  }
+  #inputArea {
+    display: flex;
+  }
+  #inputArea input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 0 0 0 10px;
+    font-size: 14px;
+  }
+  #inputArea button {
+    padding: 10px 15px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 0 0 10px 0;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="chat">
+  <div id="messages"></div>
+  <div id="inputArea">
+    <input type="text" id="messageInput" placeholder="Écrire un message..." />
+    <button id="sendBtn">Envoyer</button>
+  </div>
+</div>
+
+<script>
+  // Ici, on implémentera la logique JS pour envoyer et recevoir les messages via Firebase ou autre
+</script>
+
+</body>
+</html>
