@@ -168,98 +168,118 @@ main {
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
-// Initialisation Firebase (remplace par ta config)
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-  authDomain: "kylita-f2923.firebaseapp.com",
-  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-  projectId: "kylita-f2923",
-  storageBucket: "kylita-f2923.firebasestorage.app",
-  messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
+  apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+  authDomain: "message-957c6.firebaseapp.com",
+  databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "message-957c6",
+  storageBucket: "message-957c6.firebasestorage.app",
+  messagingSenderId: "518720941529",
+  appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+  measurementId: "G-GW0GKGQ9EP"
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.database();
 
+let username = null;
+const usernameDisplay = document.getElementById("usernameDisplay");
 const messagesEl = document.getElementById("messages");
-const form = document.getElementById("form");
-const input = document.getElementById("input");
+const input = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
 
-let username = localStorage.getItem("username");
+auth.onAuthStateChanged(user => {
+  if (user) {
+    const uid = user.uid;
+    db.ref("users/" + uid + "/displayName").once("value").then(snap => {
+      username = snap.val() || "Invité";
+      usernameDisplay.textContent = username;
+    });
+  } else {
+    window.location.href = "index.html";
+  }
+});
 
-// Si pas de pseudo, demander à l’utilisateur
-if (!username) {
-  username = prompt("Entrez votre pseudo");
-  localStorage.setItem("username", username);
+function sendMessage() {
+  const text = input.value.trim();
+  if (!text || !username) return;
+  
+  db.ref("messages").push({
+    name: username,
+    text: text,
+    timestamp: Date.now()
+  });
+  
+  input.value = "";
+  input.focus();
 }
 
-const messagesRef = db.ref("messages");
+sendBtn.addEventListener("click", sendMessage);
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter") sendMessage();
+});
 
-// Fonction pour afficher un message dans le chat
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderMessage(obj) {
   const div = document.createElement("div");
   div.className = "msg" + (obj.name === username ? " mine" : "");
   
-  // Si c’est un message système (erreur/reconnexion)
-  if (obj.system) {
-    div.className = "msg system";
-    div.textContent = obj.text;
-  } else {
-    div.innerHTML = `<span class="author">${obj.name}</span> : ${obj.text}`;
-  }
-
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `${escapeHtml(obj.name)} · <span>${new Date(obj.timestamp).toLocaleTimeString()}</span>`;
+  
+  const body = document.createElement("div");
+  body.innerHTML = escapeHtml(obj.text);
+  
+  div.appendChild(meta);
+  div.appendChild(body);
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// Charger les messages en temps réel
-messagesRef.orderByChild("timestamp").limitToLast(100).on("value", snapshot => {
-  messagesEl.innerHTML = "";
-  snapshot.forEach(child => {
-    renderMessage(child.val());
-  });
-});
-
-// Envoyer un message
-form.addEventListener("submit", e => {
-  e.preventDefault();
-  if (input.value.trim() === "") return;
-
-  const msgObj = {
-    name: username,
-    text: input.value.trim(),
-    timestamp: Date.now(),
-    system: false
-  };
-
-  messagesRef.push(msgObj);
-  input.value = "";
-});
-
-// Gestion des statuts de connexion
-function sendSystemMessage(text, isError = false) {
-  const msgObj = {
-    name: "",
-    text: text,
-    timestamp: Date.now(),
-    system: true,
-    error: isError
-  };
-  messagesRef.push(msgObj);
+// Messages système (connexion/déconnexion)
+function renderSystemMessage(text, color) {
+  const div = document.createElement("div");
+  div.className = "msg system";
+  div.style.color = color;
+  div.style.textAlign = "center";
+  div.style.margin = "8px 0";
+  div.style.fontStyle = "italic";
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// Ecoute de l'état de connexion Firebase
-firebase.database().ref(".info/connected").on("value", snap => {
+// Écoute de l'état de connexion Firebase
+let wasConnected = true;
+db.ref(".info/connected").on("value", snap => {
   if (snap.val() === true) {
-    sendSystemMessage("Reconnecté.");
+    if (!wasConnected) {
+      renderSystemMessage("Reconnecté.", "#aaa");
+    }
+    wasConnected = true;
   } else {
-    sendSystemMessage("Déconnecté. Reconnexion...", true);
+    if (wasConnected) {
+      renderSystemMessage("Déconnecté. Reconnexion...", "red");
+    }
+    wasConnected = false;
   }
 });
 
+// Affichage des messages
+db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
+  const data = snap.val();
+  if (data) renderMessage(data);
+});
 </script>
 
 </body>
