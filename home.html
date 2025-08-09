@@ -202,18 +202,70 @@ const messagesEl = document.getElementById("messages");
 const input = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
 
+// Fonction pour afficher messages
+function renderMessage(obj) {
+  const div = document.createElement("div");
+  div.className = "msg" + (obj.name === username ? " mine" : "");
+  
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `${escapeHtml(obj.name)} · <span>${new Date(obj.timestamp).toLocaleTimeString()}</span>`;
+  
+  const body = document.createElement("div");
+  body.innerHTML = escapeHtml(obj.text);
+  
+  div.appendChild(meta);
+  div.appendChild(body);
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Fonction pour messages système
+function renderSystemMessage(text, color) {
+  const div = document.createElement("div");
+  div.className = "msg system";
+  div.style.color = color;
+  div.style.textAlign = "center";
+  div.style.margin = "8px 0";
+  div.style.fontStyle = "italic";
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+// Sécurisation du texte
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 auth.onAuthStateChanged(user => {
   if (user) {
     const uid = user.uid;
     db.ref("users/" + uid + "/displayName").once("value").then(snap => {
       username = snap.val() || "Invité";
       usernameDisplay.textContent = username;
+
+      // **Une fois username prêt, on écoute les messages**
+      listenMessages();
     });
   } else {
     window.location.href = "index.html";
   }
 });
 
+function listenMessages() {
+  db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
+    const data = snap.val();
+    if (data) renderMessage(data);
+  });
+}
+
+// Envoi message
 function sendMessage() {
   const text = input.value.trim();
   if (!text || !username) return;
@@ -233,46 +285,7 @@ input.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
 
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function renderMessage(obj) {
-  const div = document.createElement("div");
-  div.className = "msg" + (obj.name === username ? " mine" : "");
-  
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.innerHTML = `${escapeHtml(obj.name)} · <span>${new Date(obj.timestamp).toLocaleTimeString()}</span>`;
-  
-  const body = document.createElement("div");
-  body.innerHTML = escapeHtml(obj.text);
-  
-  div.appendChild(meta);
-  div.appendChild(body);
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// Messages système (connexion/déconnexion)
-function renderSystemMessage(text, color) {
-  const div = document.createElement("div");
-  div.className = "msg system";
-  div.style.color = color;
-  div.style.textAlign = "center";
-  div.style.margin = "8px 0";
-  div.style.fontStyle = "italic";
-  div.textContent = text;
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// Écoute de l'état de connexion Firebase
+// Connexion / déconnexion
 let wasConnected = true;
 db.ref(".info/connected").on("value", snap => {
   if (snap.val() === true) {
