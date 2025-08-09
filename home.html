@@ -259,11 +259,19 @@ auth.onAuthStateChanged(user => {
 });
 
 function listenMessages() {
+  // Écoute les nouveaux messages en temps réel
   db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
     const data = snap.val();
     if (data) renderMessage(data);
   });
+
+  // Quand tous les messages sont chargés (une fois au début)
+  db.ref("messages").orderByChild("timestamp").limitToLast(200).once("value").then(() => {
+    // Scroll direct en bas après chargement initial
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  });
 }
+
 
 // Envoi message
 function sendMessage() {
