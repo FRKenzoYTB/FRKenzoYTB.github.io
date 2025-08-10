@@ -102,25 +102,24 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // Your Firebase configuration (provided)
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
-  authDomain: "message-957c6.firebaseapp.com",
-  databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "message-957c6",
-  storageBucket: "message-957c6.firebasestorage.app",
-  messagingSenderId: "518720941529",
-  appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
-  measurementId: "G-GW0GKGQ9EP"
-};
+    // Configuration Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.firebasestorage.app",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+      measurementId: "G-GW0GKGQ9EP"
+    };
 
-    // Initialize Firebase
+    // Initialise Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // UI elements
+    // Elements UI
     const tabLogin = document.getElementById('tab-login');
     const tabRegister = document.getElementById('tab-register');
     const loginForm = document.getElementById('login-form');
@@ -132,7 +131,7 @@ const firebaseConfig = {
       setTimeout(()=>{ if(messages.firstChild) messages.firstChild.remove() }, 6000);
     }
 
-    // Tabs
+    // Gestion onglets
     tabLogin.addEventListener('click', ()=>{
       tabLogin.classList.add('active'); tabRegister.classList.remove('active');
       loginForm.style.display = ''; registerForm.style.display = 'none';
@@ -144,7 +143,7 @@ const firebaseConfig = {
     document.getElementById('to-register').addEventListener('click', ()=> tabRegister.click());
     document.getElementById('to-login').addEventListener('click', ()=> tabLogin.click());
 
-    // Register
+    // Inscription
     registerForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const username = document.getElementById('reg-username').value.trim();
@@ -159,17 +158,18 @@ const firebaseConfig = {
       try{
         const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
         const user = userCredential.user;
-        // Update display name
+        // Mise à jour du pseudo
         await user.updateProfile({displayName: username});
-        // Save profile in Realtime Database under /users/{uid}
+        // Enregistrement dans la base de données
         const now = Date.now();
         await db.ref('users/' + user.uid).set({
           displayName: username,
           email: email,
-          createdAt: now
+          createdAt: now,
+          diamants: 20,   // <-- Attribue 20 diamants
+          role: 'Membres' // <-- Attribue le rôle Membres
         });
         showMessage('Inscription réussie — redirection en cours...', 'ok');
-        // Redirect to your app home (customize)
         setTimeout(()=>{ window.location.href = 'home.html'; }, 900);
       }catch(err){
         console.error(err);
@@ -177,46 +177,21 @@ const firebaseConfig = {
       }
     });
 
-    // Login
+    // Connexion
     loginForm.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-password').value;
+
       try{
         await auth.signInWithEmailAndPassword(email, pass);
-        showMessage('Connexion réussie — redirection...', 'ok');
-        setTimeout(()=>{ window.location.href = 'home.html'; }, 700);
+        showMessage('Connexion réussie — redirection en cours...', 'ok');
+        setTimeout(()=>{ window.location.href = 'home.html'; }, 900);
       }catch(err){
         console.error(err);
-        showMessage('Impossible de se connecter : ' + (err.message || 'Erreur'));
+        showMessage(err.message || 'Erreur lors de la connexion.');
       }
     });
-
-    // Listen to auth state (optional)
-    auth.onAuthStateChanged(user => {
-      if(user){
-        console.log('Utilisateur connecté:', user.uid, user.email);
-        // If you want to auto redirect logged-in users to home, uncomment:
-        // if(location.pathname.includes('login')) window.location.href = 'home.html';
-      } else {
-        console.log('Aucun utilisateur connecté');
-      }
-    });
-
-    // Optional: simple password reset flow (by email)
-    function addResetLink(){
-      const resetBtn = document.createElement('button');
-      resetBtn.className = 'btn ghost'; resetBtn.type='button'; resetBtn.textContent='Mot de passe oublié ?';
-      resetBtn.addEventListener('click', ()=>{
-        const email = prompt('Entrez votre adresse e‑mail pour recevoir un lien de réinitialisation :');
-        if(!email) return;
-        auth.sendPasswordResetEmail(email).then(()=> showMessage('E‑mail de réinitialisation envoyé.', 'ok')).catch(e=> showMessage(e.message || 'Erreur'));
-      });
-      // append to login form
-      loginForm.appendChild(resetBtn);
-    }
-    addResetLink();
-
   </script>
 </body>
 </html>
