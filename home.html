@@ -1,320 +1,399 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat</title>
-  <style>
-:root {
-    --bg: #0f1724;
-    --card: #0b1220;
-    --accent: #60a5fa;
-    --muted: #9aa4b2;
-    --bubble: #0b1a2b;
-}
-
-html, body {
-    height: 100%;
-    margin: 0;
-    font-family: Inter, system-ui, Segoe UI, Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(180deg, #071022 0%, #08172a 100%);
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EverFrost - Home</title>
+<style>
+  /* Style global + barre nav */
+  body {
+    margin: 0; padding: 0; font-family: Arial, sans-serif;
+    background: #0f172a; color: #cbd5e1;
+  }
+  header {
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 10px 20px;
     display: flex;
-    flex-direction: column;
-    color: #e6eef6;
-}
-
-/* Conteneur plein écran */
-.container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-/* Zone principale : messages + input */
-main {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-/* Liste des messages */
-#messages {
-    flex: 1;
-    padding: 18px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: transparent;
-}
-
-/* Bulles messages */
-.msg {
-    max-width: 78%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--bubble);
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.02);
-}
-.meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 6px;
-}
-.mine {
-    align-self: flex-end;
-    background: linear-gradient(180deg, rgba(96,165,250,0.15), rgba(96,165,250,0.06));
-    border: 1px solid rgba(96,165,250,0.1);
-}
-
-/* Barre de contrôle */
-.controls {
-    display: flex;
-    gap: 8px;
-    padding: 12px;
-    position: relative;
-    background: transparent;
-}
-
-/* Effet glassmorphism + bulles */
-.controls::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    backdrop-filter: blur(12px);
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
-    z-index: 0;
-}
-
-/* Animation bulles */
-.controls::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 5%, transparent 20%),
-                radial-gradient(circle at 80% 40%, rgba(255,255,255,0.05) 5%, transparent 20%),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 5%, transparent 20%);
-    animation: bubbleMove 10s infinite linear;
-    z-index: 0;
-}
-
-@keyframes bubbleMove {
-    0% { background-position: 0 0, 0 0, 0 0; }
-    100% { background-position: 100px 200px, -150px 100px, 200px -150px; }
-}
-
-/* Champ texte */
-.controls input[type=text] {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px);
-    color: inherit;
-    font-size: 14px;
-    z-index: 1;
-}
-
-/* Bouton envoyer avec image */
-.controls button {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    border: none;
-    background: url("send.png") center/20px no-repeat var(--accent);
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    margin: 0; font-weight: 700;
+    font-size: 1.5rem;
+    color: #7dd3fc;
+  }
+  #user-info {
+    font-weight: 600;
+  }
+  #diamantCount {
+    color: #facc15;
+    margin-left: 8px;
+  }
+  button {
     cursor: pointer;
-    z-index: 1;
-}
-.msg {
-  margin: 4px 0;
-  padding: 6px 10px;
-  border-radius: 10px;
-  max-width: 70%;
-  clear: both;
-  word-wrap: break-word;
-}
-
-.msg.mine {
-  background-color: #35F527;
-  float: right;
-  text-align: right;
-}
-
-.msg:not(.mine) {
-  background-color: #27B0F5;
-  float: left;
-  text-align: left;
-}
-
-.msg.system {
-  clear: both;
-  float: none;
-  max-width: 100%;
-  background: none !important;
-}
-
-  </style>
+    background: #0284c7;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #0369a1;
+  }
+  main {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100vh - 60px);
+    box-sizing: border-box;
+  }
+  /* Colonne Serveurs + Shop */
+  #servers, #shop {
+    flex: 1 1 300px;
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 15px;
+    overflow-y: auto;
+  }
+  #servers h2, #shop h2, #transactions h2 {
+    color: #7dd3fc;
+    margin-top: 0;
+  }
+  /* Chat + Transactions */
+  #chat-transactions {
+    flex: 2 1 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  #chat, #transactions {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 15px;
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+  }
+  #messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    background: #0f172a;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 8px;
+    color: #e0e7ff;
+    font-size: 0.9rem;
+  }
+  #chatInput {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 8px;
+  }
+  /* Formulaires */
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  form input[type=text], form input[type=number] {
+    flex-grow: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+  }
+  form textarea {
+    width: 100%;
+    resize: vertical;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+  }
+  ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  ul li {
+    background: #334155;
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  ul li:hover {
+    background: #475569;
+  }
+  ul li.selected {
+    background: #0284c7;
+  }
+  /* Shop entreprises + articles */
+  .enterprise {
+    margin-bottom: 12px;
+    border-bottom: 1px solid #475569;
+    padding-bottom: 8px;
+  }
+  .enterprise h3 {
+    margin: 0 0 4px 0;
+    color: #fbbf24;
+  }
+  .article {
+    background: #334155;
+    margin: 6px 0;
+    padding: 6px;
+    border-radius: 6px;
+  }
+  .article-title {
+    font-weight: 600;
+  }
+  .article-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Chat</h1>
-      <div class="user">Connecté en tant que <strong id="usernameDisplay">...</strong></div>
-    </header>
 
-    <main>
-      <div id="messages">
-        <div class="empty">Chargement des messages…</div>
-      </div>
-
-      <div class="controls">
-        <input id="messageInput" type="text" placeholder="Écris un message..." autocomplete="off" />
-        <button id="sendBtn">Envoyer</button>
-      </div>
-    </main>
+<header>
+  <h1>EverFrost</h1>
+  <div>
+    <span id="user-info">Utilisateur: <span id="pseudoUser">...</span> | 💎 <span id="diamantCount">0</span></span>
+    <button id="settingsBtn" style="margin-left:15px;">⚙️ Paramètres</button>
+    <button id="logoutBtn" style="margin-left:10px;">Déconnexion</button>
   </div>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script>
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+</header>
+
+<main>
+
+  <section id="servers">
+    <h2>Mes serveurs Minecraft</h2>
+    <form id="addServerForm">
+      <input type="text" id="serverName" placeholder="Nom du serveur" required />
+      <input type="text" id="serverAddress" placeholder="Adresse IP ou URL" required />
+      <button type="submit">Ajouter serveur</button>
+    </form>
+    <ul id="serversList"></ul>
+  </section>
+
+  <section id="shop">
+    <h2>Magasin</h2>
+    <div id="shopContent">
+      <p>Sélectionnez un serveur pour voir ses entreprises et articles.</p>
+    </div>
+    <button id="createEnterpriseBtn" disabled>Créer une entreprise</button>
+  </section>
+
+  <section id="chat-transactions">
+    <div id="chat">
+      <h2>Chat serveur</h2>
+      <div id="messages"></div>
+      <input id="chatInput" placeholder="Envoyer un message..." autocomplete="off" />
+      <button id="sendBtn">Envoyer</button>
+    </div>
+
+    <div id="transactions">
+      <h2>Transactions récentes</h2>
+      <div id="transactionList" style="overflow-y:auto; flex-grow:1; background:#0f172a; padding:10px; border-radius:6px; color:#a5b4fc; font-size:0.9rem;"></div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+// Import Firebase
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
+import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-  authDomain: "kylita-f2923.firebaseapp.com",
-  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-  projectId: "kylita-f2923",
-  storageBucket: "kylita-f2923.firebasestorage.app",
-  messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
+  apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+  authDomain: "message-957c6.firebaseapp.com",
+  databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "message-957c6",
+  storageBucket: "message-957c6.firebasestorage.app",
+  messagingSenderId: "518720941529",
+  appId: "1:518720941529:web:7c6b444ef9ac0b0d127dc8",
+  measurementId: "G-GW0GKGQ9EP"
 };
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-let username = null;
-const usernameDisplay = document.getElementById("usernameDisplay");
-const messagesEl = document.getElementById("messages");
-const input = document.getElementById("messageInput");
+const pseudoUser = document.getElementById("pseudoUser");
+const diamantCount = document.getElementById("diamantCount");
+const logoutBtn = document.getElementById("logoutBtn");
+const settingsBtn = document.getElementById("settingsBtn");
+
+const serversList = document.getElementById("serversList");
+const addServerForm = document.getElementById("addServerForm");
+const serverNameInput = document.getElementById("serverName");
+const serverAddressInput = document.getElementById("serverAddress");
+
+const shopContent = document.getElementById("shopContent");
+const createEnterpriseBtn = document.getElementById("createEnterpriseBtn");
+
+const messagesDiv = document.getElementById("messages");
+const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 
-// Fonction pour afficher messages
-function renderMessage(obj) {
-  const div = document.createElement("div");
-  div.className = "msg" + (obj.name === username ? " mine" : "");
-  
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.innerHTML = `${escapeHtml(obj.name)} · <span>${new Date(obj.timestamp).toLocaleTimeString()}</span>`;
-  
-  const body = document.createElement("div");
-  body.innerHTML = escapeHtml(obj.text);
-  
-  div.appendChild(meta);
-  div.appendChild(body);
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
+const transactionList = document.getElementById("transactionList");
 
-// Fonction pour messages système
-function renderSystemMessage(text, color) {
-  const div = document.createElement("div");
-  div.className = "msg system";
-  div.style.color = color;
-  div.style.textAlign = "center";
-  div.style.margin = "8px 0";
-  div.style.fontStyle = "italic";
-  div.textContent = text;
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
+let currentUser = null;
+let currentServerId = null;  // ID serveur sélectionné
+let serversData = {};
+let enterprisesData = {};
+let chatListenerUnsub = null;
 
-// Sécurisation du texte
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+// Gestion authentification
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+  currentUser = user;
+  pseudoUser.textContent = user.displayName || "Utilisateur";
 
-auth.onAuthStateChanged(user => {
-  if (user) {
-    const uid = user.uid;
-    db.ref("users/" + uid + "/displayName").once("value").then(snap => {
-      username = snap.val() || "Invité";
-      usernameDisplay.textContent = username;
+  // Récupérer diamants
+  const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
+  const diamondSnap = await get(diamondRef);
+  if (diamondSnap.exists()) {
+    diamantCount.textContent = diamondSnap.val();
+  } else {
+    diamantCount.textContent = "20"; // 20 diamants au début
+    await set(diamondRef, 20);
+  }
 
-      // **Une fois username prêt, on écoute les messages**
-      listenMessages();
+  loadServers();
+  loadTransactions();
+});
+
+// Déconnexion
+logoutBtn.onclick = () => {
+  signOut(auth).then(() => {
+    window.location.href = "login.html";
+  });
+};
+
+// Paramètres
+settingsBtn.onclick = () => {
+  window.location.href = "settings.html";
+};
+
+// Ajouter un serveur
+addServerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!serverNameInput.value.trim() || !serverAddressInput.value.trim()) return;
+
+  const newServerRef = push(ref(db, `users/${currentUser.uid}/servers`));
+  await set(newServerRef, {
+    name: serverNameInput.value.trim(),
+    address: serverAddressInput.value.trim()
+  });
+
+  serverNameInput.value = "";
+  serverAddressInput.value = "";
+  loadServers();
+});
+
+// Charger serveurs utilisateur
+async function loadServers() {
+  const serversRef = ref(db, `users/${currentUser.uid}/servers`);
+  const snapshot = await get(serversRef);
+  serversList.innerHTML = "";
+  serversData = {};
+  if (snapshot.exists()) {
+    snapshot.forEach(child => {
+      const id = child.key;
+      const data = child.val();
+      serversData[id] = data;
+      const li = document.createElement("li");
+      li.textContent = `${data.name} (${data.address})`;
+      li.dataset.id = id;
+      li.onclick = () => selectServer(id);
+      serversList.appendChild(li);
     });
-  } else {
-    window.location.href = "index.html";
   }
-});
+  if (Object.keys(serversData).length > 0) {
+    // Sélectionne le premier serveur automatiquement si aucun sélectionné
+    if (!currentServerId || !serversData[currentServerId]) selectServer(Object.keys(serversData)[0]);
+  } else {
+    shopContent.innerHTML = "<p>Vous n'avez pas encore de serveur. Ajoutez-en un pour commencer.</p>";
+    createEnterpriseBtn.disabled = true;
+    clearChat();
+  }
+}
 
-function listenMessages() {
-  // Écoute les nouveaux messages en temps réel
-  db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
-    const data = snap.val();
-    if (data) renderMessage(data);
-  });
+// Sélectionner un serveur
+async function selectServer(id) {
+  currentServerId = id;
+  // Marquer sélection dans la liste
+  for (const li of serversList.children) {
+    li.classList.toggle("selected", li.dataset.id === id);
+  }
+  createEnterpriseBtn.disabled = false;
 
-  // Quand tous les messages sont chargés (une fois au début)
-  db.ref("messages").orderByChild("timestamp").limitToLast(200).once("value").then(() => {
-    // Scroll direct en bas après chargement initial
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+  loadEnterprises(id);
+  loadChat(id);
+}
+
+// Charger entreprises + articles d’un serveur
+async function loadEnterprises(serverId) {
+  const enterprisesRef = ref(db, `servers/${serverId}/enterprises`);
+  const snapshot = await get(enterprisesRef);
+  enterprisesData = {};
+  if (snapshot.exists()) {
+    enterprisesData = snapshot.val();
+  } else {
+    enterprisesData = {};
+  }
+  renderShop();
+}
+
+// Afficher le shop (entreprises + articles)
+function renderShop() {
+  if (!currentServerId) {
+    shopContent.innerHTML = "<p>Sélectionnez un serveur pour voir ses entreprises et articles.</p>";
+    return;
+  }
+  if (!enterprisesData || Object.keys(enterprisesData).length === 0) {
+    shopContent.innerHTML = "<p>Aucune entreprise sur ce serveur.</p>";
+    return;
+  }
+  let html = "";
+  for (const [enterpriseId, enterprise] of Object.entries(enterprisesData)) {
+    html += `<div class="enterprise">
+      <h3>${enterprise.name || "Entreprise sans nom"}</h3>
+      <ul>`;
+    if (enterprise.articles) {
+      for (const [articleId, article] of Object.entries(enterprise.articles)) {
+        html += `<li class="article" data-enterprise-id="${enterpriseId}" data-article-id="${articleId}">
+          <div class="article-title">${article.title || "Article"}</div>
+          <div class="article-desc">${article.description || ""}</div>
+          <div>Prix: ${article.price} 💎</div>
+          <button class="buyBtn" data-enterprise-id="${enterpriseId}" data-article-id="${articleId}">Acheter</button>
+        </li>`;
+      }
+    } else {
+      html += "<li>Aucun article</li>";
+    }
+    html += "</ul></div>";
+  }
+  shopContent.innerHTML = html;
+
+  // Ajouter écouteurs achats
+  document.querySelectorAll(".buyBtn").forEach(btn => {
+    btn.onclick = () => buyArticle(btn.dataset.enterpriseId, btn.dataset.articleId);
   });
 }
 
-
-// Envoi message
-function sendMessage() {
-  const text = input.value.trim();
-  if (!text || !username) return;
-  
-  db.ref("messages").push({
-    name: username,
-    text: text,
-    timestamp: Date.now()
-  });
-  
-  input.value = "";
-  input.focus();
-}
-
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") sendMessage();
-});
-
-// Connexion / déconnexion
-let wasConnected = true;
-db.ref(".info/connected").on("value", snap => {
-  if (snap.val() === true) {
-    if (!wasConnected) {
-      renderSystemMessage("Reconnecté.", "#aaa");
-    }
-    wasConnected = true;
-  } else {
-    if (wasConnected) {
-      renderSystemMessage("Déconnecté. Reconnexion...", "red");
-    }
-    wasConnected = false;
-  }
-});
-
-// Affichage des messages
-db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
-  const data = snap.val();
-  if (data) renderMessage(data);
-});
-</script>
-
-</body>
-</html>
+// Acheter un article
+async
