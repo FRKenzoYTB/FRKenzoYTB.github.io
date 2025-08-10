@@ -132,62 +132,66 @@
     }
 
     // Gestion onglets
-    tabLogin.addEventListener('click', ()=>{
-      tabLogin.classList.add('active'); tabRegister.classList.remove('active');
-      loginForm.style.display = ''; registerForm.style.display = 'none';
+    tabLogin.addEventListener('click', ()=> {
+      tabLogin.classList.add('active');
+      tabRegister.classList.remove('active');
+      loginForm.style.display = '';
+      registerForm.style.display = 'none';
     });
-    tabRegister.addEventListener('click', ()=>{
-      tabRegister.classList.add('active'); tabLogin.classList.remove('active');
-      registerForm.style.display = ''; loginForm.style.display = 'none';
+    tabRegister.addEventListener('click', ()=> {
+      tabRegister.classList.add('active');
+      tabLogin.classList.remove('active');
+      registerForm.style.display = '';
+      loginForm.style.display = 'none';
     });
     document.getElementById('to-register').addEventListener('click', ()=> tabRegister.click());
     document.getElementById('to-login').addEventListener('click', ()=> tabLogin.click());
 
     // Inscription
-    registerForm.addEventListener('submit', async (e)=>{
+    registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('reg-username').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const pass = document.getElementById('reg-password').value;
       const pass2 = document.getElementById('reg-password2').value;
 
-      if(!username || username.length < 2) return showMessage('Le pseudo doit contenir au moins 2 caractères.');
-      if(pass.length < 6) return showMessage('Le mot de passe doit contenir au moins 6 caractères.');
-      if(pass !== pass2) return showMessage('Les mots de passe ne correspondent pas.');
+      if (!username || username.length < 2) return showMessage('Le pseudo doit contenir au moins 2 caractères.');
+      if (pass.length < 6) return showMessage('Le mot de passe doit contenir au moins 6 caractères.');
+      if (pass !== pass2) return showMessage('Les mots de passe ne correspondent pas.');
 
-      try{
+      try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
         const user = userCredential.user;
         // Mise à jour du pseudo
-        await user.updateProfile({displayName: username});
+        await user.updateProfile({ displayName: username });
         // Enregistrement dans la base de données
         const now = Date.now();
         await db.ref('users/' + user.uid).set({
           displayName: username,
           email: email,
           createdAt: now,
-          diamants: 20,   // <-- Attribue 20 diamants
-          role: 'Membres' // <-- Attribue le rôle Membres
+          diamants: 20,   // Attribue 20 diamants
+          role: 'Membres' // Attribue le rôle Membres
         });
         showMessage('Inscription réussie — redirection en cours...', 'ok');
-        setTimeout(()=>{ window.location.href = 'home.html'; }, 900);
-      }catch(err){
+        setTimeout(() => { window.location.href = 'home.html'; }, 900);
+      } catch (err) {
         console.error(err);
         showMessage(err.message || 'Erreur lors de la création de compte.');
       }
     });
 
     // Connexion
-    loginForm.addEventListener('submit', async (e)=>{
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
       const pass = document.getElementById('login-password').value;
 
-      try{
+      try {
         await auth.signInWithEmailAndPassword(email, pass);
         showMessage('Connexion réussie — redirection en cours...', 'ok');
-        setTimeout(()=>{ window.location.href = 'home.html'; }, 900);
-      }catch(err){
+        setTimeout(() => { window.location.href = 'home.html'; }, 900);
+      } catch (err) {
         console.error(err);
         showMessage(err.message || 'Erreur lors de la connexion.');
       }
