@@ -211,7 +211,7 @@
 // Import Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-auth.js";
-import { getDatabase, ref, get, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+import { getDatabase, ref, get, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
@@ -248,152 +248,11 @@ const sendBtn = document.getElementById("sendBtn");
 const transactionList = document.getElementById("transactionList");
 
 let currentUser = null;
-let currentServerId = null;  // ID serveur sélectionné
+let currentServerId = null;
 let serversData = {};
 let enterprisesData = {};
 let chatListenerUnsub = null;
 
-// Gestion authentification
+// Auth
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  currentUser = user;
-  pseudoUser.textContent = user.displayName || "Utilisateur";
-
-  // Récupérer diamants
-  const diamondRef = ref(db, "users/" + user.uid + "/diamonds");
-  const diamondSnap = await get(diamondRef);
-  if (diamondSnap.exists()) {
-    diamantCount.textContent = diamondSnap.val();
-  } else {
-    diamantCount.textContent = "20"; // 20 diamants au début
-    await set(diamondRef, 20);
-  }
-
-  loadServers();
-  loadTransactions();
-});
-
-// Déconnexion
-logoutBtn.onclick = () => {
-  signOut(auth).then(() => {
-    window.location.href = "login.html";
-  });
-};
-
-// Paramètres
-settingsBtn.onclick = () => {
-  window.location.href = "settings.html";
-};
-
-// Ajouter un serveur
-addServerForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!serverNameInput.value.trim() || !serverAddressInput.value.trim()) return;
-
-  const newServerRef = push(ref(db, `users/${currentUser.uid}/servers`));
-  await set(newServerRef, {
-    name: serverNameInput.value.trim(),
-    address: serverAddressInput.value.trim()
-  });
-
-  serverNameInput.value = "";
-  serverAddressInput.value = "";
-  loadServers();
-});
-
-// Charger serveurs utilisateur
-async function loadServers() {
-  const serversRef = ref(db, `users/${currentUser.uid}/servers`);
-  const snapshot = await get(serversRef);
-  serversList.innerHTML = "";
-  serversData = {};
-  if (snapshot.exists()) {
-    snapshot.forEach(child => {
-      const id = child.key;
-      const data = child.val();
-      serversData[id] = data;
-      const li = document.createElement("li");
-      li.textContent = `${data.name} (${data.address})`;
-      li.dataset.id = id;
-      li.onclick = () => selectServer(id);
-      serversList.appendChild(li);
-    });
-  }
-  if (Object.keys(serversData).length > 0) {
-    // Sélectionne le premier serveur automatiquement si aucun sélectionné
-    if (!currentServerId || !serversData[currentServerId]) selectServer(Object.keys(serversData)[0]);
-  } else {
-    shopContent.innerHTML = "<p>Vous n'avez pas encore de serveur. Ajoutez-en un pour commencer.</p>";
-    createEnterpriseBtn.disabled = true;
-    clearChat();
-  }
-}
-
-// Sélectionner un serveur
-async function selectServer(id) {
-  currentServerId = id;
-  // Marquer sélection dans la liste
-  for (const li of serversList.children) {
-    li.classList.toggle("selected", li.dataset.id === id);
-  }
-  createEnterpriseBtn.disabled = false;
-
-  loadEnterprises(id);
-  loadChat(id);
-}
-
-// Charger entreprises + articles d’un serveur
-async function loadEnterprises(serverId) {
-  const enterprisesRef = ref(db, `servers/${serverId}/enterprises`);
-  const snapshot = await get(enterprisesRef);
-  enterprisesData = {};
-  if (snapshot.exists()) {
-    enterprisesData = snapshot.val();
-  } else {
-    enterprisesData = {};
-  }
-  renderShop();
-}
-
-// Afficher le shop (entreprises + articles)
-function renderShop() {
-  if (!currentServerId) {
-    shopContent.innerHTML = "<p>Sélectionnez un serveur pour voir ses entreprises et articles.</p>";
-    return;
-  }
-  if (!enterprisesData || Object.keys(enterprisesData).length === 0) {
-    shopContent.innerHTML = "<p>Aucune entreprise sur ce serveur.</p>";
-    return;
-  }
-  let html = "";
-  for (const [enterpriseId, enterprise] of Object.entries(enterprisesData)) {
-    html += `<div class="enterprise">
-      <h3>${enterprise.name || "Entreprise sans nom"}</h3>
-      <ul>`;
-    if (enterprise.articles) {
-      for (const [articleId, article] of Object.entries(enterprise.articles)) {
-        html += `<li class="article" data-enterprise-id="${enterpriseId}" data-article-id="${articleId}">
-          <div class="article-title">${article.title || "Article"}</div>
-          <div class="article-desc">${article.description || ""}</div>
-          <div>Prix: ${article.price} 💎</div>
-          <button class="buyBtn" data-enterprise-id="${enterpriseId}" data-article-id="${articleId}">Acheter</button>
-        </li>`;
-      }
-    } else {
-      html += "<li>Aucun article</li>";
-    }
-    html += "</ul></div>";
-  }
-  shopContent.innerHTML = html;
-
-  // Ajouter écouteurs achats
-  document.querySelectorAll(".buyBtn").forEach(btn => {
-    btn.onclick = () => buyArticle(btn.dataset.enterpriseId, btn.dataset.articleId);
-  });
-}
-
-// Acheter un article
-async
+  if (!user
