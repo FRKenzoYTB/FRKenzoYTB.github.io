@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>kenzoPay Dashboard</title>
+  <title>KenzoPay - Dashboard</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       background: #f5f7fa;
     }
-    /* Header */
     header {
-      background: #28a745; /* vert */
+      background: #28a745;
       color: white;
-      padding: 15px 20px;
+      padding: 15px;
       font-size: 20px;
       font-weight: bold;
     }
-
-    /* Main */
     main {
       padding: 20px;
     }
@@ -39,11 +40,6 @@
       font-size: 30px;
       color: #28a745;
     }
-    .welcome-text h2 {
-      margin: 0;
-    }
-
-    /* Dashboard sections */
     .dashboard {
       display: grid;
       grid-template-columns: 1fr 2fr;
@@ -58,42 +54,41 @@
     .card h3 {
       margin-top: 0;
     }
-
     .balance {
       font-size: 24px;
       font-weight: bold;
       margin: 10px 0;
       color: #28a745;
     }
-
     .completed .row {
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       border-bottom: 1px solid #eee;
       padding: 10px 0;
     }
     .completed .row:last-child {
       border-bottom: none;
     }
-    .green { color: #28a745; }
-    .red { color: red; }
-
-    .banks .item {
-      border-top: 1px solid #eee;
-      padding: 10px 0;
+    .completed img {
+      width: 20px;
+      height: 20px;
+    }
+    .timestamp {
+      font-size: 12px;
+      color: #777;
+      margin-left: auto;
     }
   </style>
 </head>
 <body>
-  <header>
-    KenzoPay
-  </header>
+  <header>KenzoPay</header>
 
   <main>
     <div class="welcome">
       <div class="avatar">+</div>
       <div class="welcome-text">
-        <h2>Hi again, Test Buyer!</h2>
+        <h2 id="welcomeName">Hi again!</h2>
       </div>
     </div>
 
@@ -102,29 +97,105 @@
       <div>
         <div class="card">
           <h3>kenzoPay balance</h3>
-          <div class="balance">$4,999.99</div>
-        </div>
-        <div class="card banks">
-          <h3>Banks and cards</h3>
-          <div class="item">CREDIT UNION 1 x-5515</div>
-          <div class="item">VISA x-9077</div>
+          <div class="balance" id="balance">0µ</div>
         </div>
       </div>
 
       <!-- Right side -->
       <div class="card completed">
-        <h3>Completed</h3>
-        <div class="row">
-          <span>JAN 20 - Test Store (Payment)</span>
-          <span class="red">- $0.01</span>
-        </div>
-        <div class="row">
-          <span>JAN 20 - kenzoPay (Transfer)</span>
-          <span class="green">+ $5,000.00</span>
-        </div>
-        <a href="#">View all</a>
+        <h3>Logs</h3>
+        <div id="logs"></div>
       </div>
     </div>
   </main>
+
+  <script>
+    // ✅ Config Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzSzAc3Fz18PdgumpGY3_s2K42v2MzYK0",
+      authDomain: "message-957c6.firebaseapp.com",
+      databaseURL: "https://message-957c6-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "message-957c6",
+      storageBucket: "message-957c6.firebasestorage.app",
+      messagingSenderId: "518720941529",
+      appId: "1:518720941529:web:7c6b444ef9ac0b0d"
+    };
+
+    // ✅ Initialisation
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const balanceEl = document.getElementById("balance");
+    const logsEl = document.getElementById("logs");
+    const welcomeName = document.getElementById("welcomeName");
+
+    // ✅ Surveille l’état de connexion
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        const uid = user.uid;
+        const userRef = db.ref("users/" + uid);
+
+        // Si le solde n’existe pas → initialise à 0µ
+        userRef.child("balance").get().then(snapshot => {
+          if (!snapshot.exists()) {
+            userRef.update({ balance: 0 });
+          }
+        });
+
+        // Affiche le solde en direct
+        userRef.child("balance").on("value", snap => {
+          balanceEl.textContent = (snap.val() || 0) + "µ";
+        });
+
+        // Nom affiché
+        welcomeName.textContent = "Hi again, " + (user.email || "User") + "!";
+
+        // Récupère les logs
+        userRef.child("logs").on("child_added", snap => {
+          const logData = snap.val();
+          addLog(logData);
+        });
+      } else {
+        window.location.href = "login.html"; // Redirection si pas connecté
+      }
+    });
+
+    // ✅ Ajout d’un log dans l’UI
+    function addLog(logData) {
+      const row = document.createElement("div");
+      row.classList.add("row");
+
+      let icon = null;
+      let text = logData.message;
+
+      if (text.startsWith("[TRANSFERT]")) {
+        icon = "transfert.png";
+        text = text.replace("[TRANSFERT]", "").trim();
+      } else if (text.startsWith("[RECEPTION]")) {
+        icon = "recept.png";
+        text = text.replace("[RECEPTION]", "").trim();
+      }
+
+      if (icon) {
+        const img = document.createElement("img");
+        img.src = icon;
+        row.appendChild(img);
+      }
+
+      const messageSpan = document.createElement("span");
+      messageSpan.textContent = text;
+      row.appendChild(messageSpan);
+
+      // Affiche le timestamp formaté
+      const timeSpan = document.createElement("span");
+      timeSpan.classList.add("timestamp");
+      const date = new Date(logData.timestamp || Date.now());
+      timeSpan.textContent = date.toLocaleString();
+      row.appendChild(timeSpan);
+
+      logsEl.prepend(row); // les plus récents en haut
+    }
+  </script>
 </body>
 </html>
