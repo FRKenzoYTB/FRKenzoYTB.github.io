@@ -1,320 +1,130 @@
-<!doctype html>
-<html lang="fr">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat</title>
+  <meta charset="UTF-8">
+  <title>kenzoPay Dashboard</title>
   <style>
-:root {
-    --bg: #0f1724;
-    --card: #0b1220;
-    --accent: #60a5fa;
-    --muted: #9aa4b2;
-    --bubble: #0b1a2b;
-}
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+    }
+    /* Header */
+    header {
+      background: #28a745; /* vert */
+      color: white;
+      padding: 15px 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
 
-html, body {
-    height: 100%;
-    margin: 0;
-    font-family: Inter, system-ui, Segoe UI, Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(180deg, #071022 0%, #08172a 100%);
-    display: flex;
-    flex-direction: column;
-    color: #e6eef6;
-}
+    /* Main */
+    main {
+      padding: 20px;
+    }
+    .welcome {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #d9d9d9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      color: #28a745;
+    }
+    .welcome-text h2 {
+      margin: 0;
+    }
 
-/* Conteneur plein écran */
-.container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
+    /* Dashboard sections */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin-top: 0;
+    }
 
-/* Zone principale : messages + input */
-main {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
+    .balance {
+      font-size: 24px;
+      font-weight: bold;
+      margin: 10px 0;
+      color: #28a745;
+    }
 
-/* Liste des messages */
-#messages {
-    flex: 1;
-    padding: 18px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: transparent;
-}
+    .completed .row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+    }
+    .completed .row:last-child {
+      border-bottom: none;
+    }
+    .green { color: #28a745; }
+    .red { color: red; }
 
-/* Bulles messages */
-.msg {
-    max-width: 78%;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--bubble);
-    box-shadow: inset 0 -1px 0 rgba(255,255,255,0.02);
-}
-.meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 6px;
-}
-.mine {
-    align-self: flex-end;
-    background: linear-gradient(180deg, rgba(96,165,250,0.15), rgba(96,165,250,0.06));
-    border: 1px solid rgba(96,165,250,0.1);
-}
-
-/* Barre de contrôle */
-.controls {
-    display: flex;
-    gap: 8px;
-    padding: 12px;
-    position: relative;
-    background: transparent;
-}
-
-/* Effet glassmorphism + bulles */
-.controls::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    backdrop-filter: blur(12px);
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
-    z-index: 0;
-}
-
-/* Animation bulles */
-.controls::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.05) 5%, transparent 20%),
-                radial-gradient(circle at 80% 40%, rgba(255,255,255,0.05) 5%, transparent 20%),
-                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 5%, transparent 20%);
-    animation: bubbleMove 10s infinite linear;
-    z-index: 0;
-}
-
-@keyframes bubbleMove {
-    0% { background-position: 0 0, 0 0, 0 0; }
-    100% { background-position: 100px 200px, -150px 100px, 200px -150px; }
-}
-
-/* Champ texte */
-.controls input[type=text] {
-    flex: 1;
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(8px);
-    color: inherit;
-    font-size: 14px;
-    z-index: 1;
-}
-
-/* Bouton envoyer avec image */
-.controls button {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    border: none;
-    background: url("send.png") center/20px no-repeat var(--accent);
-    cursor: pointer;
-    z-index: 1;
-}
-.msg {
-  margin: 4px 0;
-  padding: 6px 10px;
-  border-radius: 10px;
-  max-width: 70%;
-  clear: both;
-  word-wrap: break-word;
-}
-
-.msg.mine {
-  background-color: #35F527;
-  float: right;
-  text-align: right;
-}
-
-.msg:not(.mine) {
-  background-color: #27B0F5;
-  float: left;
-  text-align: left;
-}
-
-.msg.system {
-  clear: both;
-  float: none;
-  max-width: 100%;
-  background: none !important;
-}
-
+    .banks .item {
+      border-top: 1px solid #eee;
+      padding: 10px 0;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Chat</h1>
-      <div class="user">Connecté en tant que <strong id="usernameDisplay">...</strong></div>
-    </header>
+  <header>
+    KenzoPay
+  </header>
 
-    <main>
-      <div id="messages">
-        <div class="empty">Chargement des messages…</div>
+  <main>
+    <div class="welcome">
+      <div class="avatar">+</div>
+      <div class="welcome-text">
+        <h2>Hi again, Test Buyer!</h2>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <!-- Left side -->
+      <div>
+        <div class="card">
+          <h3>kenzoPay balance</h3>
+          <div class="balance">$4,999.99</div>
+        </div>
+        <div class="card banks">
+          <h3>Banks and cards</h3>
+          <div class="item">CREDIT UNION 1 x-5515</div>
+          <div class="item">VISA x-9077</div>
+        </div>
       </div>
 
-      <div class="controls">
-        <input id="messageInput" type="text" placeholder="Écris un message..." autocomplete="off" />
-        <button id="sendBtn">Envoyer</button>
+      <!-- Right side -->
+      <div class="card completed">
+        <h3>Completed</h3>
+        <div class="row">
+          <span>JAN 20 - Test Store (Payment)</span>
+          <span class="red">- $0.01</span>
+        </div>
+        <div class="row">
+          <span>JAN 20 - kenzoPay (Transfer)</span>
+          <span class="green">+ $5,000.00</span>
+        </div>
+        <a href="#">View all</a>
       </div>
-    </main>
-  </div>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-<script>
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-  authDomain: "kylita-f2923.firebaseapp.com",
-  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-  projectId: "kylita-f2923",
-  storageBucket: "kylita-f2923.firebasestorage.app",
-  messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-let username = null;
-const usernameDisplay = document.getElementById("usernameDisplay");
-const messagesEl = document.getElementById("messages");
-const input = document.getElementById("messageInput");
-const sendBtn = document.getElementById("sendBtn");
-
-// Fonction pour afficher messages
-function renderMessage(obj) {
-  const div = document.createElement("div");
-  div.className = "msg" + (obj.name === username ? " mine" : "");
-  
-  const meta = document.createElement("div");
-  meta.className = "meta";
-  meta.innerHTML = `${escapeHtml(obj.name)} · <span>${new Date(obj.timestamp).toLocaleTimeString()}</span>`;
-  
-  const body = document.createElement("div");
-  body.innerHTML = escapeHtml(obj.text);
-  
-  div.appendChild(meta);
-  div.appendChild(body);
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// Fonction pour messages système
-function renderSystemMessage(text, color) {
-  const div = document.createElement("div");
-  div.className = "msg system";
-  div.style.color = color;
-  div.style.textAlign = "center";
-  div.style.margin = "8px 0";
-  div.style.fontStyle = "italic";
-  div.textContent = text;
-  messagesEl.appendChild(div);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// Sécurisation du texte
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    const uid = user.uid;
-    db.ref("users/" + uid + "/displayName").once("value").then(snap => {
-      username = snap.val() || "Invité";
-      usernameDisplay.textContent = username;
-
-      // **Une fois username prêt, on écoute les messages**
-      listenMessages();
-    });
-  } else {
-    window.location.href = "index.html";
-  }
-});
-
-function listenMessages() {
-  // Écoute les nouveaux messages en temps réel
-  db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
-    const data = snap.val();
-    if (data) renderMessage(data);
-  });
-
-  // Quand tous les messages sont chargés (une fois au début)
-  db.ref("messages").orderByChild("timestamp").limitToLast(200).once("value").then(() => {
-    // Scroll direct en bas après chargement initial
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-  });
-}
-
-
-// Envoi message
-function sendMessage() {
-  const text = input.value.trim();
-  if (!text || !username) return;
-  
-  db.ref("messages").push({
-    name: username,
-    text: text,
-    timestamp: Date.now()
-  });
-  
-  input.value = "";
-  input.focus();
-}
-
-sendBtn.addEventListener("click", sendMessage);
-input.addEventListener("keydown", e => {
-  if (e.key === "Enter") sendMessage();
-});
-
-// Connexion / déconnexion
-let wasConnected = true;
-db.ref(".info/connected").on("value", snap => {
-  if (snap.val() === true) {
-    if (!wasConnected) {
-      renderSystemMessage("Reconnecté.", "#aaa");
-    }
-    wasConnected = true;
-  } else {
-    if (wasConnected) {
-      renderSystemMessage("Déconnecté. Reconnexion...", "red");
-    }
-    wasConnected = false;
-  }
-});
-
-// Affichage des messages
-db.ref("messages").orderByChild("timestamp").limitToLast(200).on("child_added", snap => {
-  const data = snap.val();
-  if (data) renderMessage(data);
-});
-</script>
-
+    </div>
+  </main>
 </body>
 </html>
