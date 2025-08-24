@@ -3,77 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>KenzoPay - Connexion</title>
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <!-- Firebase compat (ancienne syntaxe mais fonctionne en HTML simple) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
-    }
-    header {
-      background: #28a745;
-      color: white;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-    }
-    .container {
-      max-width: 350px;
-      margin: 50px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #28a745;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #218838;
-    }
-    .msg {
-      margin-top: 15px;
-      font-size: 14px;
-      text-align: center;
-    }
+    body { font-family: Arial; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f7fa; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); width: 300px; }
+    input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; background: #28a745; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background: #218838; }
+    #error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <header>KenzoPay</header>
-
-  <div class="container">
-    <h2>Connexion / Inscription</h2>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button onclick="login()">Connexion</button>
-    <button onclick="register()">Inscription</button>
-    <div class="msg" id="msg"></div>
+  <div class="card">
+    <h2>Connexion</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Mot de passe" />
+    <button onclick="login()">Se connecter</button>
+    <button onclick="register()">Créer un compte</button>
+    <div id="error"></div>
   </div>
 
   <script>
-    // ✅ Ta config Firebase
+    // ✅ Config Firebase
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
@@ -85,43 +39,40 @@ const firebaseConfig = {
   appId: "1:431823530994:web:88a07e633751686e5ad96b",
   measurementId: "G-F4LLNWQJ16"
 };
-
-    // ✅ Initialisation Firebase
+    // ✅ Initialiser Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
 
-    const msg = document.getElementById("msg");
-
+    // Connexion
     function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-
       auth.signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          msg.style.color = "green";
-          msg.textContent = "Connexion réussie ✅";
-          setTimeout(() => {
-            window.location.href = "dashboard.html"; // Redirection après connexion
-          }, 1000);
+        .then(() => {
+          window.location.href = "dashboard.html";
         })
         .catch(error => {
-          msg.style.color = "red";
-          msg.textContent = "Erreur : " + error.message;
+          document.getElementById("error").innerText = error.message;
         });
     }
 
+    // Inscription
     function register() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-
       auth.createUserWithEmailAndPassword(email, password)
         .then(userCredential => {
-          msg.style.color = "green";
-          msg.textContent = "Compte créé avec succès 🎉";
+          const uid = userCredential.user.uid;
+          // ✅ On initialise le user dans la DB
+          db.ref("users/" + uid).set({
+            balance: 0,
+            logs: []
+          });
+          window.location.href = "dashboard.html";
         })
         .catch(error => {
-          msg.style.color = "red";
-          msg.textContent = "Erreur : " + error.message;
+          document.getElementById("error").innerText = error.message;
         });
     }
   </script>
