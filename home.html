@@ -7,88 +7,134 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: Arial, sans-serif;
-      background: #f3fdf6;
-      margin: 0;
-      padding: 0;
-      color: #222;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #f3fdf6);
+      color: #1a1a1a;
+      min-height: 100vh;
     }
+
     .topbar {
-      background: #2ecc71;
-      padding: 15px;
-      color: white;
-      font-weight: bold;
-      font-size: 20px;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      padding: 20px 30px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
     .container {
-      padding: 20px;
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
     }
+
     .balance {
-      font-size: 28px;
-      font-weight: bold;
+      background: #fff;
+      padding: 25px 20px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 30px;
+      color: #27ae60;
+    }
+
+    .btn {
+      background: #27ae60;
+      color: #fff;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
       margin-bottom: 20px;
     }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+      background: #2ecc71;
+    }
+
+    h3 {
+      margin-bottom: 15px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+
     .logs {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      max-height: 300px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      max-height: 350px;
       overflow-y: auto;
     }
+
     .log {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
     }
     .log img {
-      width: 24px;
-      height: 24px;
-      margin-right: 10px;
+      width: 28px;
+      height: 28px;
+      margin-right: 12px;
     }
-    .btn {
-      background: #2ecc71;
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 20px;
+    .log span {
+      font-size: 15px;
+      color: #555;
     }
-    .btn:hover { background: #27ae60; }
 
     /* Modal */
     .modal {
       display: none;
       position: fixed;
-      z-index: 10;
+      z-index: 50;
       left: 0; top: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.5);
       justify-content: center;
       align-items: center;
+      animation: fadeIn 0.3s;
     }
     .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      width: 300px;
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      width: 350px;
       text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      animation: slideIn 0.4s;
     }
     .modal-content input, .modal-content textarea {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 14px;
     }
     .close {
       float: right;
       cursor: pointer;
-      font-size: 18px;
+      font-size: 20px;
+      color: #888;
+      transition: 0.2s;
     }
+    .close:hover { color: #333; }
+
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+    @keyframes slideIn { from {transform: translateY(-30px); opacity:0;} to {transform: translateY(0); opacity:1;} }
   </style>
 </head>
 <body>
@@ -139,13 +185,11 @@
         currentUser = user;
         currentUid = user.uid;
 
-        // Charger balance
         db.ref("users/" + currentUid + "/balance").on("value", snap => {
           balance = snap.val() || 0;
           document.getElementById("balance").textContent = balance;
         });
 
-        // Charger logs
         db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
           const logMsg = snap.val();
           displayLog(logMsg);
@@ -196,7 +240,6 @@
       if (!destEmail || !amount) return alert("Champs obligatoires !");
       if (amount > balance) return alert("Montant supérieur à votre solde.");
 
-      // Trouver UID du destinataire par email
       const usersSnap = await db.ref("users").once("value");
       let destUid = null;
       usersSnap.forEach(child => {
@@ -207,11 +250,9 @@
 
       if (!destUid) return alert("Destinataire introuvable.");
 
-      // Débiter expéditeur
       db.ref("users/" + currentUid + "/balance").set(balance - amount);
       db.ref("users/" + currentUid + "/logs").push("[TRANSFERT] Vous avez effectué un virement de " + amount + "µ à " + destEmail);
 
-      // Créditer destinataire
       db.ref("users/" + destUid + "/balance").transaction(b => (b || 0) + amount);
       db.ref("users/" + destUid + "/logs").push("[RECEPTION] Vous avez reçu " + amount + "µ de la part de " + currentUser.email);
 
