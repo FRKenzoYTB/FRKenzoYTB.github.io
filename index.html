@@ -50,7 +50,7 @@ const firebaseConfig = {
       const password = document.getElementById("password").value;
       auth.signInWithEmailAndPassword(email, password)
         .then(() => {
-          window.location.href = "dashboard.html";
+          window.location.href = "home.html";
         })
         .catch(error => {
           document.getElementById("error").innerText = error.message;
