@@ -3,201 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <title>KenzoPay - Dashboard</title>
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f3fdf6;
       margin: 0;
-      background: #f5f7fa;
+      padding: 0;
+      color: #222;
     }
-    header {
-      background: #28a745;
-      color: white;
+    .topbar {
+      background: #2ecc71;
       padding: 15px;
-      font-size: 20px;
+      color: white;
       font-weight: bold;
+      font-size: 20px;
     }
-    main {
+    .container {
       padding: 20px;
-    }
-    .welcome {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .avatar {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: #d9d9d9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 30px;
-      color: #28a745;
-    }
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 20px;
-    }
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .card h3 {
-      margin-top: 0;
     }
     .balance {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
-      margin: 10px 0;
-      color: #28a745;
+      margin-bottom: 20px;
     }
-    .completed .row {
+    .logs {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .log {
       display: flex;
       align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid #eee;
-      padding: 10px 0;
+      margin-bottom: 10px;
     }
-    .completed .row:last-child {
-      border-bottom: none;
+    .log img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
     }
-    .completed img {
-      width: 20px;
-      height: 20px;
+    .btn {
+      background: #2ecc71;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
     }
-    .timestamp {
-      font-size: 12px;
-      color: #777;
-      margin-left: auto;
+    .btn:hover { background: #27ae60; }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+    }
+    .modal-content input, .modal-content textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .close {
+      float: right;
+      cursor: pointer;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <header>KenzoPay</header>
+  <div class="topbar">KenzoPay</div>
+  <div class="container">
+    <div class="balance">Solde: <span id="balance">0</span> µ</div>
+    <button class="btn" id="donateBtn">+ Donner de l'argent</button>
 
-  <main>
-    <div class="welcome">
-      <div class="avatar">+</div>
-      <div class="welcome-text">
-        <h2 id="welcomeName">Hi again!</h2>
-      </div>
+    <h3>Notifications</h3>
+    <div class="logs" id="logs"></div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="donateModal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h3>Envoyer de l'argent</h3>
+      <input type="email" id="destEmail" placeholder="Email du destinataire" required>
+      <input type="number" id="amount" placeholder="Montant (µ)" min="1" required>
+      <textarea id="message" placeholder="Message (optionnel)"></textarea>
+      <button class="btn" id="sendMoney">Envoyer</button>
     </div>
-
-    <div class="dashboard">
-      <!-- Left side -->
-      <div>
-        <div class="card">
-          <h3>kenzoPay balance</h3>
-          <div class="balance" id="balance">0µ</div>
-        </div>
-      </div>
-
-      <!-- Right side -->
-      <div class="card completed">
-        <h3>Logs</h3>
-        <div id="logs"></div>
-      </div>
-    </div>
-  </main>
+  </div>
 
   <script>
     // ✅ Config Firebase
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-  authDomain: "kylita-f2923.firebaseapp.com",
-  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-  projectId: "kylita-f2923",
-  storageBucket: "kylita-f2923.firebasestorage.app",
-  messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
+      authDomain: "kylita-f2923.firebaseapp.com",
+      databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
+      projectId: "kylita-f2923",
+      storageBucket: "kylita-f2923.appspot.com",
+      messagingSenderId: "431823530994",
+      appId: "1:431823530994:web:88a07e633751686e5ad96b",
+      measurementId: "G-F4LLNWQJ16"
+    };
 
-    // ✅ Initialisation
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    const balanceEl = document.getElementById("balance");
-    const logsEl = document.getElementById("logs");
-    const welcomeName = document.getElementById("welcomeName");
+    let currentUser = null;
+    let currentUid = null;
+    let balance = 0;
 
-    // ✅ Surveille l’état de connexion
     auth.onAuthStateChanged(user => {
       if (user) {
-        const uid = user.uid;
-        const userRef = db.ref("users/" + uid);
+        currentUser = user;
+        currentUid = user.uid;
 
-        // Si le solde n’existe pas → initialise à 0µ
-        userRef.child("balance").get().then(snapshot => {
-          if (!snapshot.exists()) {
-            userRef.update({ balance: 0 });
-          }
+        // Charger balance
+        db.ref("users/" + currentUid + "/balance").on("value", snap => {
+          balance = snap.val() || 0;
+          document.getElementById("balance").textContent = balance;
         });
 
-        // Affiche le solde en direct
-        userRef.child("balance").on("value", snap => {
-          balanceEl.textContent = (snap.val() || 0) + "µ";
-        });
-
-        // Nom affiché
-        welcomeName.textContent = "Hi again, " + (user.email || "User") + "!";
-
-        // Récupère les logs
-        userRef.child("logs").on("child_added", snap => {
-          const logData = snap.val();
-          addLog(logData);
+        // Charger logs
+        db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
+          const logMsg = snap.val();
+          displayLog(logMsg);
         });
       } else {
-        window.location.href = "index.html"; // Redirection si pas connecté
+        window.location.href = "index.html";
       }
     });
 
-    // ✅ Ajout d’un log dans l’UI
-    function addLog(logData) {
-      const row = document.createElement("div");
-      row.classList.add("row");
+    function displayLog(msg) {
+      const logsDiv = document.getElementById("logs");
+      const div = document.createElement("div");
+      div.className = "log";
 
-      let icon = null;
-      let text = logData.message;
-
-      if (text.startsWith("[TRANSFERT]")) {
+      let icon = "";
+      if (msg.startsWith("[TRANSFERT]")) {
         icon = "transfert.png";
-        text = text.replace("[TRANSFERT]", "").trim();
-      } else if (text.startsWith("[RECEPTION]")) {
+        msg = msg.replace("[TRANSFERT]", "");
+      } else if (msg.startsWith("[RECEPTION]")) {
         icon = "recept.png";
-        text = text.replace("[RECEPTION]", "").trim();
+        msg = msg.replace("[RECEPTION]", "");
       }
 
       if (icon) {
         const img = document.createElement("img");
         img.src = icon;
-        row.appendChild(img);
+        div.appendChild(img);
       }
 
-      const messageSpan = document.createElement("span");
-      messageSpan.textContent = text;
-      row.appendChild(messageSpan);
+      const span = document.createElement("span");
+      span.textContent = msg;
+      div.appendChild(span);
 
-      // Affiche le timestamp formaté
-      const timeSpan = document.createElement("span");
-      timeSpan.classList.add("timestamp");
-      const date = new Date(logData.timestamp || Date.now());
-      timeSpan.textContent = date.toLocaleString();
-      row.appendChild(timeSpan);
-
-      logsEl.prepend(row); // les plus récents en haut
+      logsDiv.prepend(div);
     }
+
+    // Modal
+    const modal = document.getElementById("donateModal");
+    document.getElementById("donateBtn").onclick = () => modal.style.display = "flex";
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+
+    // Envoyer argent
+    document.getElementById("sendMoney").onclick = async () => {
+      const destEmail = document.getElementById("destEmail").value.trim();
+      const amount = parseInt(document.getElementById("amount").value);
+      const message = document.getElementById("message").value.trim();
+
+      if (!destEmail || !amount) return alert("Champs obligatoires !");
+      if (amount > balance) return alert("Montant supérieur à votre solde.");
+
+      // Trouver UID du destinataire par email
+      const usersSnap = await db.ref("users").once("value");
+      let destUid = null;
+      usersSnap.forEach(child => {
+        if (child.val().email === destEmail) {
+          destUid = child.key;
+        }
+      });
+
+      if (!destUid) return alert("Destinataire introuvable.");
+
+      // Débiter expéditeur
+      db.ref("users/" + currentUid + "/balance").set(balance - amount);
+      db.ref("users/" + currentUid + "/logs").push("[TRANSFERT] Vous avez effectué un virement de " + amount + "µ à " + destEmail);
+
+      // Créditer destinataire
+      db.ref("users/" + destUid + "/balance").transaction(b => (b || 0) + amount);
+      db.ref("users/" + destUid + "/logs").push("[RECEPTION] Vous avez reçu " + amount + "µ de la part de " + currentUser.email);
+
+      modal.style.display = "none";
+    };
   </script>
 </body>
 </html>
