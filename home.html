@@ -252,24 +252,42 @@
     let currentUid = null;
     let balance = 0;
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        currentUid = user.uid;
+   auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    currentUid = user.uid;
 
-        db.ref("users/" + currentUid + "/balance").on("value", snap => {
-          balance = snap.val() || 0;
-          document.getElementById("balance").textContent = balance;
+    // Vérifie si le user existe déjà dans la DB
+    db.ref("users/" + currentUid).once("value").then(snapshot => {
+      if (!snapshot.exists()) {
+        // Première connexion → on crée son profil
+        db.ref("users/" + currentUid).set({
+          username: "NON DEFINI",
+          email: user.email,
+          balance: 0,
+          logs: {
+            init: "Compte créé le " + new Date().toLocaleString()
+          }
         });
-
-        db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
-          const logMsg = snap.val();
-          displayLog(logMsg);
-        });
-      } else {
-        window.location.href = "index.html";
       }
     });
+
+    // Abonnement au solde
+    db.ref("users/" + currentUid + "/balance").on("value", snap => {
+      balance = snap.val() || 0;
+      document.getElementById("balance").textContent = balance;
+    });
+
+    // Abonnement aux logs
+    db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
+      const logMsg = snap.val();
+      displayLog(logMsg);
+    });
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
 
     function displayLog(msg) {
       const logsDiv = document.getElementById("logs");
