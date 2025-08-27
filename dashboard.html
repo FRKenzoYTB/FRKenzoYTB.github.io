@@ -242,15 +242,17 @@
   </div>
 
   <!-- Paramètres -->
-  <div class="modal" id="settingsModal">
-    <div class="modal-content">
-      <span class="close" id="closeSettings">&times;</span>
-      <h3>Modifier mes infos</h3>
-      <input type="text" id="newPseudo" placeholder="Nouveau pseudo">
-      <input type="url" id="newPfp" placeholder="URL photo de profil">
-      <button class="btn" id="saveSettings">Sauvegarder</button>
-    </div>
+<!-- Paramètres -->
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <span class="close" id="closeSettings">&times;</span>
+    <h3>Modifier mes infos</h3>
+    <input type="text" id="newPseudo" placeholder="Nouveau pseudo">
+    <input type="url" id="newPfp" placeholder="URL photo de profil">
+    <input type="password" id="discordKey" placeholder="Clé Discord (5 caractères)">
+    <button class="btn" id="saveSettings">Sauvegarder</button>
   </div>
+</div>
 
 
 
@@ -363,17 +365,43 @@ document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
 // --- Paramètres ---
 document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsModal").style.display = "flex";
-document.getElementById("saveSettings").onclick = () => {
+document.getElementById("saveSettings").onclick = async () => {
   const newPseudo = document.getElementById("newPseudo").value.trim();
   const newPfp = document.getElementById("newPfp").value.trim();
-  if (newPseudo || newPfp) {
-    db.ref("users/" + currentUid).update({
-      username: newPseudo || null,
-      pfp: newPfp || null
+  const discordKey = document.getElementById("discordKey").value.trim().toUpperCase();
+
+  let updates = {};
+  if (newPseudo) updates.username = newPseudo;
+  if (newPfp) updates.pfp = newPfp;
+
+  // Si une clé Discord est entrée, on synchronise le solde
+  if (discordKey) {
+    const usersSnap = await db.ref("discord_users").once("value"); // collection Discord
+    let matchedUser = null;
+    usersSnap.forEach(child => {
+      if (child.val().link_key === discordKey) matchedUser = { uid: child.key, data: child.val() };
     });
-    document.getElementById("settingsModal").style.display = "none";
+
+    if (!matchedUser) {
+      return alert("Clé Discord invalide.");
+    }
+
+    // Synchroniser le solde
+    balance = matchedUser.data.balance || 0;
+    document.getElementById("balance").textContent = balance;
+
+    // Optionnel : enregistrer la clé sur notre compte pour rappel
+    updates.discord_key = discordKey;
   }
+
+  if (Object.keys(updates).length > 0) {
+    db.ref("users/" + currentUid).update(updates);
+  }
+
+  document.getElementById("settingsModal").style.display = "none";
+  alert("Paramètres mis à jour !");
 };
+
 </script>
 
 </body>
