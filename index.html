@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>KenzoPay - Tableau de bord</title>
+  <title>KenzoPay - Connexion</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -13,226 +13,86 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f7f9fc;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
-
-    /* ---- HEADER ---- */
-    .topbar {
-      background: #003087;
-      padding: 15px 40px;
-      color: #fff;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .topbar nav a {
-      color: #fff;
-      margin-left: 25px;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .topbar nav a:hover {
-      text-decoration: underline;
+      justify-content: center;
+      height: 100vh;
     }
 
-    /* ---- CONTAINER ---- */
-    .container {
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 0 20px;
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 30px;
-    }
-
-    /* ---- BALANCE CARD ---- */
     .card {
       background: #fff;
       border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      margin-bottom: 20px;
-    }
-    .balance {
-      font-size: 32px;
-      font-weight: 700;
-      color: #003087;
-      margin-bottom: 15px;
-    }
-
-    /* ---- BUTTONS ---- */
-    .btn {
-      background: #0070ba;
-      color: #fff;
-      padding: 12px 22px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-    .btn:hover {
-      background: #00457c;
-    }
-
-    /* ---- ACTIONS ---- */
-    .actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 15px;
-    }
-    .action {
-      flex: 1;
-      background: #f0f7ff;
-      border-radius: 12px;
-      padding: 20px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 360px;
       text-align: center;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .action:hover {
-      background: #e3f0ff;
-    }
-    .action h4 {
-      margin-top: 10px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #003087;
     }
 
-    /* ---- NOTIFICATIONS ---- */
-    .logs {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      max-height: 400px;
-      overflow-y: auto;
-    }
-    .log {
-      display: flex;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .log:last-child { border: none; }
-    .log span { font-size: 15px; color: #444; }
-
-    /* ---- MODAL ---- */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 50;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      width: 350px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    }
-    .modal-content h3 {
-      margin-bottom: 15px;
-      font-size: 18px;
-      font-weight: 600;
+    h2 {
+      margin-bottom: 20px;
       color: #003087;
+      font-size: 22px;
+      font-weight: 700;
     }
-    .modal-content input, .modal-content textarea {
+
+    input {
       width: 100%;
-      padding: 10px;
-      margin: 8px 0;
+      padding: 12px;
+      margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
     }
-    .close {
-      float: right;
+
+    .btn {
+      width: 100%;
+      background: #0070ba;
+      color: #fff;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 20px;
-      color: #888;
+      transition: 0.3s;
+      margin-top: 10px;
     }
-    .close:hover { color: #333; }
+    .btn:hover { background: #00457c; }
+
+    .switch {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #333;
+    }
+    .switch span {
+      color: #0070ba;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <!-- HEADER -->
-  <div class="topbar">
-    <div>KenzoPay</div>
-    <nav>
-      <a href="#">Accueil</a>
-      <a href="#">Envoyer</a>
-      <a href="#">Portefeuille</a>
-      <a href="#">Activité</a>
-      <a href="#">Aide</a>
-    </nav>
-  </div>
+  <div class="card">
+    <h2 id="formTitle">Connexion</h2>
 
-  <!-- MAIN -->
-  <div class="container">
-    <!-- LEFT SIDE -->
-    <div>
-      <div class="card">
-        <div class="balance">Solde : <span id="balance">0</span> µ</div>
-        <button class="btn" id="donateBtn">+ Envoyer de l'argent</button>
-      </div>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Mot de passe" required>
 
-      <div class="card">
-        <h3>Actions rapides</h3>
-        <div class="actions">
-          <div class="action">
-            <h4>Envoyer</h4>
-          </div>
-          <div class="action">
-            <h4>Demander</h4>
-          </div>
-          <div class="action">
-            <h4>Virement</h4>
-          </div>
-        </div>
-      </div>
+    <button class="btn" id="submitBtn">Se connecter</button>
+    <div class="error" id="errorMsg"></div>
 
-      <div class="card">
-        <h3>Notifications</h3>
-        <div class="logs" id="logs"></div>
-      </div>
-    </div>
-
-    <!-- RIGHT SIDE -->
-    <div>
-      <div class="card">
-        <h3>Comptes & cartes</h3>
-        <p>Ajoutez vos cartes ou comptes bancaires pour sécuriser vos transactions.</p>
-      </div>
-      <div class="card">
-        <h3>Associations</h3>
-        <p>Soutenez les causes qui vous tiennent à cœur en un clic.</p>
-      </div>
+    <div class="switch">
+      Pas encore de compte ? <span id="toggleForm">Inscription</span>
     </div>
   </div>
 
-  <!-- MODAL -->
-  <div class="modal" id="donateModal">
-    <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
-      <h3>Envoyer de l'argent</h3>
-      <input type="email" id="destEmail" placeholder="Email du destinataire" required>
-      <input type="number" id="amount" placeholder="Montant (µ)" min="1" required>
-      <textarea id="message" placeholder="Message (optionnel)"></textarea>
-      <button class="btn" id="sendMoney">Envoyer</button>
-    </div>
-  </div>
-
-  <!-- SCRIPT -->
   <script>
+    // Config Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
       authDomain: "kylita-f2923.firebaseapp.com",
@@ -248,84 +108,51 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    let currentUser = null;
-    let currentUid = null;
-    let balance = 0;
+    let isLogin = true; // Par défaut : connexion
 
-   auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    currentUid = user.uid;
+    document.getElementById("toggleForm").onclick = () => {
+      isLogin = !isLogin;
+      document.getElementById("formTitle").textContent = isLogin ? "Connexion" : "Inscription";
+      document.getElementById("submitBtn").textContent = isLogin ? "Se connecter" : "S'inscrire";
+      document.getElementById("toggleForm").textContent = isLogin ? "Inscription" : "Connexion";
+      document.querySelector(".switch").innerHTML = isLogin 
+        ? `Pas encore de compte ? <span id="toggleForm">Inscription</span>`
+        : `Déjà inscrit ? <span id="toggleForm">Connexion</span>`;
+      document.getElementById("toggleForm").onclick = arguments.callee;
+    };
 
-    // Vérifie si le user existe déjà dans la DB
-    db.ref("users/" + currentUid).once("value").then(snapshot => {
-      if (!snapshot.exists()) {
-        // Première connexion → on crée son profil
-        db.ref("users/" + currentUid).set({
-          username: "NON DEFINI",
-          email: user.email,
-          balance: 0,
-          logs: {
-            init: "Compte créé le " + new Date().toLocaleString()
-          }
-        });
-      }
-    });
+    document.getElementById("submitBtn").onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const errorMsg = document.getElementById("errorMsg");
 
-    // Abonnement au solde
-    db.ref("users/" + currentUid + "/balance").on("value", snap => {
-      balance = snap.val() || 0;
-      document.getElementById("balance").textContent = balance;
-    });
+      errorMsg.textContent = "";
 
-    // Abonnement aux logs
-    db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
-      const logMsg = snap.val();
-      displayLog(logMsg);
-    });
-  } else {
-    window.location.href = "index.html";
-  }
-});
+      try {
+        if (isLogin) {
+          // Connexion
+          await auth.signInWithEmailAndPassword(email, password);
+          window.location.href = "dashboard.html";
+        } else {
+          // Inscription
+          const cred = await auth.createUserWithEmailAndPassword(email, password);
+          const uid = cred.user.uid;
 
+          // Créer les données utilisateur
+          await db.ref("users/" + uid).set({
+            username: "NON DEFINI",
+            email: email,
+            balance: 0,
+            logs: {
+              init: "Compte créé le " + new Date().toLocaleString()
+            }
+          });
 
-    function displayLog(msg) {
-      const logsDiv = document.getElementById("logs");
-      const div = document.createElement("div");
-      div.className = "log";
-      div.innerHTML = `<span>${msg}</span>`;
-      logsDiv.prepend(div);
-    }
-
-    const modal = document.getElementById("donateModal");
-    document.getElementById("donateBtn").onclick = () => modal.style.display = "flex";
-    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
-
-    document.getElementById("sendMoney").onclick = async () => {
-      const destEmail = document.getElementById("destEmail").value.trim();
-      const amount = parseInt(document.getElementById("amount").value);
-      const message = document.getElementById("message").value.trim();
-
-      if (!destEmail || !amount) return alert("Champs obligatoires !");
-      if (amount > balance) return alert("Montant supérieur à votre solde.");
-
-      const usersSnap = await db.ref("users").once("value");
-      let destUid = null;
-      usersSnap.forEach(child => {
-        if (child.val().email === destEmail) {
-          destUid = child.key;
+          window.location.href = "dashboard.html";
         }
-      });
-
-      if (!destUid) return alert("Destinataire introuvable.");
-
-      db.ref("users/" + currentUid + "/balance").set(balance - amount);
-      db.ref("users/" + currentUid + "/logs").push("[TRANSFERT] Vous avez envoyé " + amount + "µ à " + destEmail);
-
-      db.ref("users/" + destUid + "/balance").transaction(b => (b || 0) + amount);
-      db.ref("users/" + destUid + "/logs").push("[RECEPTION] Vous avez reçu " + amount + "µ de " + currentUser.email);
-
-      modal.style.display = "none";
+      } catch (error) {
+        errorMsg.textContent = error.message;
+      }
     };
   </script>
 </body>
