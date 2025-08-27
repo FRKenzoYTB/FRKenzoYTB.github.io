@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>KenzoPay - Tableau de bord</title>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
@@ -13,30 +13,48 @@
     body {
       font-family: 'Inter', sans-serif;
       background: #f7f9fc;
-      color: #1a1a1a;
       min-height: 100vh;
     }
 
     /* ---- HEADER ---- */
     .topbar {
       background: #003087;
-      padding: 15px 40px;
+      padding: 15px 30px;
       color: #fff;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 18px;
-      font-weight: 600;
     }
-    .topbar nav a {
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .user-info img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+    }
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .user-details strong { font-size: 15px; }
+    .user-details small { color: #ddd; font-size: 13px; }
+    .logout {
+      background: #c0392b;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
       color: #fff;
-      margin-left: 25px;
-      text-decoration: none;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 5px;
     }
-    .topbar nav a:hover {
-      text-decoration: underline;
-    }
+    .logout:hover { background: #e74c3c; }
 
     /* ---- CONTAINER ---- */
     .container {
@@ -48,7 +66,7 @@
       gap: 30px;
     }
 
-    /* ---- BALANCE CARD ---- */
+    /* ---- CARD ---- */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -75,9 +93,7 @@
       font-weight: 600;
       transition: all 0.3s ease;
     }
-    .btn:hover {
-      background: #00457c;
-    }
+    .btn:hover { background: #00457c; }
 
     /* ---- ACTIONS ---- */
     .actions {
@@ -94,9 +110,7 @@
       cursor: pointer;
       transition: 0.2s;
     }
-    .action:hover {
-      background: #e3f0ff;
-    }
+    .action:hover { background: #e3f0ff; }
     .action h4 {
       margin-top: 10px;
       font-size: 16px;
@@ -105,14 +119,7 @@
     }
 
     /* ---- NOTIFICATIONS ---- */
-    .logs {
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      max-height: 400px;
-      overflow-y: auto;
-    }
+    .logs { max-height: 400px; overflow-y: auto; }
     .log {
       display: flex;
       align-items: center;
@@ -166,14 +173,15 @@
 <body>
   <!-- HEADER -->
   <div class="topbar">
-    <div>KenzoPay</div>
-    <nav>
-      <a href="#">Accueil</a>
-      <a href="#">Envoyer</a>
-      <a href="#">Portefeuille</a>
-      <a href="#">Activité</a>
-      <a href="#">Aide</a>
-    </nav>
+    <div style="font-size:18px; font-weight:700;">KenzoPay</div>
+    <div class="user-info">
+      <img id="userPfp" src="https://via.placeholder.com/45" alt="PFP">
+      <div class="user-details">
+        <strong id="userPseudo">Chargement...</strong>
+        <small id="userEmail"></small>
+        <button class="logout" id="logoutBtn">Déconnexion</button>
+      </div>
+    </div>
   </div>
 
   <!-- MAIN -->
@@ -182,22 +190,14 @@
     <div>
       <div class="card">
         <div class="balance">Solde : <span id="balance">0</span> µ</div>
-        <button class="btn" id="donateBtn">+ Envoyer de l'argent</button>
       </div>
 
       <div class="card">
         <h3>Actions rapides</h3>
         <div class="actions">
-          <div class="action">
-            <h4>Envoyer</h4>
-          </div>
-          <div class="action">
-            <h4>Demander</h4>
-          </div>
-          <div class="action">
-            <h4>Virement</h4>
-          </div>
-        </div>
+          <div class="action" id="envoyerAction"><h4>Envoyer</h4></div>
+          <div class="action" id="demanderAction"><h4>Demander</h4></div>
+          
       </div>
 
       <div class="card">
@@ -209,20 +209,17 @@
     <!-- RIGHT SIDE -->
     <div>
       <div class="card">
-        <h3>Comptes & cartes</h3>
-        <p>Ajoutez vos cartes ou comptes bancaires pour sécuriser vos transactions.</p>
-      </div>
-      <div class="card">
-        <h3>Associations</h3>
-        <p>Soutenez les causes qui vous tiennent à cœur en un clic.</p>
+        <h3>Paramètres</h3>
+        <button class="btn" id="settingsBtn">Modifier mes infos</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL -->
+  <!-- MODALS -->
+  <!-- Envoyer -->
   <div class="modal" id="donateModal">
     <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
+      <span class="close" id="closeDonate">&times;</span>
       <h3>Envoyer de l'argent</h3>
       <input type="email" id="destEmail" placeholder="Email du destinataire" required>
       <input type="number" id="amount" placeholder="Montant (µ)" min="1" required>
@@ -231,102 +228,86 @@
     </div>
   </div>
 
-  <!-- SCRIPT -->
+  <!-- Demander -->
+  <div class="modal" id="requestModal">
+    <div class="modal-content">
+      <span class="close" id="closeRequest">&times;</span>
+      <h3>Votre email</h3>
+      <input type="text" id="copyEmail" readonly>
+      <button class="btn" id="copyBtn">Copier</button>
+    </div>
+  </div>
+
+  <!-- Paramètres -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <span class="close" id="closeSettings">&times;</span>
+      <h3>Modifier mes infos</h3>
+      <input type="text" id="newPseudo" placeholder="Nouveau pseudo">
+      <input type="url" id="newPfp" placeholder="URL photo de profil">
+      <button class="btn" id="saveSettings">Sauvegarder</button>
+    </div>
+  </div>
+
+  <!-- Première fois -->
+  <div class="modal" id="firstTimeModal" style="display:flex;">
+    <div class="modal-content">
+      <h3>Bienvenue !</h3>
+      <p>Choisissez un pseudo et une photo de profil :</p>
+      <input type="text" id="firstPseudo" placeholder="Pseudo">
+      <input type="url" id="firstPfp" placeholder="URL photo de profil">
+      <button class="btn" id="firstSave">Valider</button>
+    </div>
+  </div>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-      authDomain: "kylita-f2923.firebaseapp.com",
-      databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-      projectId: "kylita-f2923",
-      storageBucket: "kylita-f2923.appspot.com",
-      messagingSenderId: "431823530994",
-      appId: "1:431823530994:web:88a07e633751686e5ad96b",
-      measurementId: "G-F4LLNWQJ16"
-    };
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      currentUid = user.uid;
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+      // Vérifie si l'utilisateur existe dans Firebase
+      db.ref("users/" + currentUid).once("value", snap => {
+        if (!snap.exists()) {
+          // Première fois -> créer l'utilisateur
+          db.ref("users/" + currentUid).set({
+            email: currentUser.email,
+            username: "NON DEFINI",
+            pdpUrl: "NON DEFINI",
+            balance: 0
+          });
+        } else {
+          // Charger infos utilisateur
+          const userData = snap.val();
+          balance = userData.balance || 0;
+          document.getElementById("balance").textContent = balance;
 
-    let currentUser = null;
-    let currentUid = null;
-    let balance = 0;
-
-   auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    currentUid = user.uid;
-
-    // Vérifie si le user existe déjà dans la DB
-    db.ref("users/" + currentUid).once("value").then(snapshot => {
-      if (!snapshot.exists()) {
-        // Première connexion → on crée son profil
-        db.ref("users/" + currentUid).set({
-          username: "NON DEFINI",
-          email: user.email,
-          balance: 0,
-          logs: {
-            init: "Compte créé le " + new Date().toLocaleString()
+          // Afficher pseudo + email + pdp
+          document.getElementById("userName").textContent = userData.username;
+          document.getElementById("userEmail").textContent = userData.email;
+          if (userData.pdpUrl && userData.pdpUrl !== "NON DEFINI") {
+            document.getElementById("userPdp").src = userData.pdpUrl;
           }
-        });
-      }
-    });
 
-    // Abonnement au solde
-    db.ref("users/" + currentUid + "/balance").on("value", snap => {
-      balance = snap.val() || 0;
-      document.getElementById("balance").textContent = balance;
-    });
-
-    // Abonnement aux logs
-    db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
-      const logMsg = snap.val();
-      displayLog(logMsg);
-    });
-  } else {
-    window.location.href = "index.html";
-  }
-});
-
-
-    function displayLog(msg) {
-      const logsDiv = document.getElementById("logs");
-      const div = document.createElement("div");
-      div.className = "log";
-      div.innerHTML = `<span>${msg}</span>`;
-      logsDiv.prepend(div);
-    }
-
-    const modal = document.getElementById("donateModal");
-    document.getElementById("donateBtn").onclick = () => modal.style.display = "flex";
-    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
-
-    document.getElementById("sendMoney").onclick = async () => {
-      const destEmail = document.getElementById("destEmail").value.trim();
-      const amount = parseInt(document.getElementById("amount").value);
-      const message = document.getElementById("message").value.trim();
-
-      if (!destEmail || !amount) return alert("Champs obligatoires !");
-      if (amount > balance) return alert("Montant supérieur à votre solde.");
-
-      const usersSnap = await db.ref("users").once("value");
-      let destUid = null;
-      usersSnap.forEach(child => {
-        if (child.val().email === destEmail) {
-          destUid = child.key;
+          // Vérifier si pseudo ou pdp non défini
+          if (userData.username === "NON DEFINI" || userData.pdpUrl === "NON DEFINI") {
+            document.getElementById("setupModal").style.display = "flex";
+          }
         }
       });
 
-      if (!destUid) return alert("Destinataire introuvable.");
+      // Charger logs
+      db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
+        const logMsg = snap.val();
+        displayLog(logMsg);
+      });
+    } else {
+      window.location.href = "index.html";
+    }
+  });
+</script>
 
-      db.ref("users/" + currentUid + "/balance").set(balance - amount);
-      db.ref("users/" + currentUid + "/logs").push("[TRANSFERT] Vous avez envoyé " + amount + "µ à " + destEmail);
-
-      db.ref("users/" + destUid + "/balance").transaction(b => (b || 0) + amount);
-      db.ref("users/" + destUid + "/logs").push("[RECEPTION] Vous avez reçu " + amount + "µ de " + currentUser.email);
-
-      modal.style.display = "none";
-    };
-  </script>
 </body>
 </html>
