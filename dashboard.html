@@ -282,8 +282,9 @@
 <div class="card">
   <h3>Entreprises</h3>
   <input type="text" id="searchCompany" placeholder="Rechercher...">
-  <div id="companyList"></div>
+  <div id="companyContainer"></div>
 </div>
+
 
 
 
@@ -439,41 +440,54 @@ if(createCompanyBtn) createCompanyBtn.onclick = async () => {
   loadCompanies();
 };
 
-// --- CHARGER LA LISTE DES ENTREPRISES ---
 async function loadCompanies() {
-  const listDiv = document.getElementById("companyList");
-  if(!listDiv) return;
-  listDiv.innerHTML = "";
+  const container = document.getElementById("companyContainer");
+  if (!container) return;
+  container.innerHTML = ""; // reset
+
   const companiesSnap = await db.ref("companies").once("value");
   companiesSnap.forEach(c => {
     const data = c.val();
-    const div = document.createElement("div");
-    div.className = "companyCard";
-    div.innerHTML = `
-      <strong>${data.name}</strong> - Balance: ${data.balance} µ
-      <button class="btn btn-transfer">Virement</button>
-      ${data.members[currentUid] ? '<button class="btn btn-withdraw">Retirer</button>' : ''}
+    const card = document.createElement("div");
+    card.className = "companyCard card"; // garde le style card existant
+    card.innerHTML = `
+      <strong>${data.name}</strong>
+      <div>Balance: <span class="companyBalance">${data.balance}</span> µ</div>
+      <div class="companyActions">
+        <button class="btn btn-transfer">Virement</button>
+        ${data.members[currentUid] ? '<button class="btn btn-withdraw">Retirer</button>' : ''}
+      </div>
+      <div class="companyLogs"></div>
     `;
-    listDiv.appendChild(div);
+    container.appendChild(card);
 
-    // --- Virement depuis user vers entreprise ---
-    div.querySelector(".btn-transfer")?.addEventListener("click", async () => {
-      const amount = parseInt(prompt("Montant à transférer à l'entreprise:"));
-      if(!amount || amount > balance) return alert("Montant invalide");
+    // --- Virement utilisateur -> entreprise ---
+    card.querySelector(".btn-transfer")?.addEventListener("click", async () => {
+      const amount = parseInt(prompt("Montant à transférer à l'entreprise :"));
+      if (!amount || amount > balance) return alert("Montant invalide");
       await db.ref("users/" + currentUid + "/balance").set(balance - amount);
       await db.ref("companies/" + c.key + "/balance").transaction(b => (b || 0) + amount);
-      alert("Virement effectué !");
+      await db.ref("companies/" + c.key + "/logs").push(`${currentUser.email} a versé ${amount} µ`);
       loadCompanies();
     });
 
-    // --- Retirer de l'entreprise si membre ---
-    div.querySelector(".btn-withdraw")?.addEventListener("click", async () => {
-      const amount = parseInt(prompt("Montant à retirer de l'entreprise:"));
-      if(!amount || amount > data.balance) return alert("Montant invalide");
+    // --- Retrait si membre ---
+    card.querySelector(".btn-withdraw")?.addEventListener("click", async () => {
+      const amount = parseInt(prompt("Montant à retirer :"));
+      if (!amount || amount > data.balance) return alert("Montant invalide");
       await db.ref("companies/" + c.key + "/balance").transaction(b => b - amount);
       await db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + amount);
-      alert("Retrait effectué !");
+      await db.ref("companies/" + c.key + "/logs").push(`${currentUser.email} a retiré ${amount} µ`);
       loadCompanies();
+    });
+
+    // --- Affichage logs en temps réel pour chaque entreprise ---
+    const logsDiv = card.querySelector(".companyLogs");
+    db.ref("companies/" + c.key + "/logs").on("child_added", snap => {
+      const div = document.createElement("div");
+      div.className = "log";
+      div.textContent = snap.val();
+      logsDiv.prepend(div);
     });
   });
 }
@@ -485,6 +499,8 @@ document.getElementById("searchCompany")?.addEventListener("input", e => {
     div.style.display = div.querySelector("strong").textContent.toLowerCase().includes(filter) ? "block" : "none";
   });
 });
+
+
 
 // --- Charger entreprises au départ ---
 loadCompanies();
