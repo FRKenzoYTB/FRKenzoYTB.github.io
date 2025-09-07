@@ -11,7 +11,8 @@
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background: #003087; color: #fff; }
-    button { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    select { padding: 5px; border-radius: 5px; }
+    button { padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     button.accept { background: #28a745; color: #fff; }
     button.accept:disabled { background: #ccc; cursor: not-allowed; }
   </style>
@@ -19,18 +20,19 @@
 <body>
 
 <h2>Admin Panel - Gestion des utilisateurs</h2>
+
 <table>
   <thead>
     <tr>
       <th>Email</th>
       <th>Balance (µ)</th>
       <th>Claim</th>
-      <th>Action</th>
+      <th>Accepter Claim</th>
+      <th>kykysmp</th>
+      <th>Mettre à jour kykysmp</th>
     </tr>
   </thead>
-  <tbody id="usersTable">
-    <!-- utilisateurs ajoutés ici -->
-  </tbody>
+  <tbody id="usersTable"></tbody>
 </table>
 
 <script>
@@ -47,48 +49,82 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
 const usersTable = document.getElementById('usersTable');
 
-// Récupérer tous les utilisateurs
 db.ref("users").on("value", snap => {
   const users = snap.val();
-  usersTable.innerHTML = ""; // vider le tableau
+  usersTable.innerHTML = "";
 
   for (let uid in users) {
     const user = users[uid];
     const tr = document.createElement("tr");
 
+    // Email
     const emailTd = document.createElement("td");
     emailTd.textContent = user.email || "Non défini";
 
+    // Balance
     const balanceTd = document.createElement("td");
     balanceTd.textContent = user.balance || 0;
 
+    // Claim
     const claimTd = document.createElement("td");
     claimTd.textContent = user.claim || "false";
 
-    const actionTd = document.createElement("td");
-    const btn = document.createElement("button");
-
+    // Bouton Accepter Claim
+    const claimBtnTd = document.createElement("td");
+    const claimBtn = document.createElement("button");
     if (user.claim === "pending") {
-      btn.textContent = "Accepter";
-      btn.className = "accept";
-      btn.onclick = () => {
-        // ajouter 15 à la balance et passer claim à true
+      claimBtn.textContent = "Accepter";
+      claimBtn.className = "accept";
+      claimBtn.onclick = () => {
+        // Ajouter 15 à la balance et mettre claim à true
         db.ref("users/" + uid + "/balance").transaction(b => (b || 0) + 15);
         db.ref("users/" + uid + "/claim").set(true);
       };
     } else {
-      btn.textContent = "-";
-      btn.disabled = true;
+      claimBtn.textContent = "-";
+      claimBtn.disabled = true;
     }
+    claimBtnTd.appendChild(claimBtn);
 
-    actionTd.appendChild(btn);
+    // Champ kykysmp
+    const kykysmpTd = document.createElement("td");
+    const select = document.createElement("select");
+    const optionTrue = document.createElement("option");
+    optionTrue.value = "true";
+    optionTrue.textContent = "true";
+    const optionFalse = document.createElement("option");
+    optionFalse.value = "false";
+    optionFalse.textContent = "false";
+    select.appendChild(optionTrue);
+    select.appendChild(optionFalse);
+    if (user.kykysmp === true || user.kykysmp === "true") {
+      select.value = "true";
+    } else {
+      select.value = "false";
+    }
+    kykysmpTd.appendChild(select);
+
+    // Bouton Mettre à jour kykysmp
+    const updateTd = document.createElement("td");
+    const updateBtn = document.createElement("button");
+    updateBtn.textContent = "Mettre à jour";
+    updateBtn.onclick = () => {
+      const val = select.value === "true";
+      db.ref("users/" + uid + "/kykysmp").set(val)
+        .then(() => alert(`Champ "kykysmp" mis à jour pour ${user.email}`));
+    };
+    updateTd.appendChild(updateBtn);
+
+    // Ajouter les cellules à la ligne
     tr.appendChild(emailTd);
     tr.appendChild(balanceTd);
     tr.appendChild(claimTd);
-    tr.appendChild(actionTd);
+    tr.appendChild(claimBtnTd);
+    tr.appendChild(kykysmpTd);
+    tr.appendChild(updateTd);
+
     usersTable.appendChild(tr);
   }
 });
