@@ -298,19 +298,13 @@ const loader = document.createElement('div');
 loader.id = 'loader';
 const barsContainer = document.createElement('div');
 barsContainer.className = 'bars';
-for (let i=1;i<=5;i++){
+for(let i=1;i<=5;i++){
   const bar = document.createElement('div');
   bar.className = 'bar';
-  bar.id = 'bar'+i;
   barsContainer.appendChild(bar);
 }
 loader.appendChild(barsContainer);
 document.body.appendChild(loader);
-
-const mainContent = document.createElement('div');
-mainContent.id = 'mainContent';
-mainContent.style.display = 'none';
-document.body.appendChild(mainContent);
 
 const bars = Array.from(document.querySelectorAll('.bar'));
 function animateBars() {
@@ -325,12 +319,11 @@ let interval = setInterval(animateBars,1000);
 animateBars();
 
 // --- Après 2 secondes loader disparaît ---
-setTimeout(() => {
+setTimeout(()=>{
   clearInterval(interval);
-  loader.remove();
-  mainContent.style.display = 'block';
-  initApp(); // Lance ton app Firebase
+  loader.remove(); // supprime juste le loader
 }, 2000);
+
 
 
 // --- FONCTION INIT APP ---
