@@ -347,19 +347,6 @@ auth.onAuthStateChanged(user => {
     }
   });
 
-  // Bonus +15 µ quand claim devient true (UNE SEULE FOIS)
-  db.ref("users/" + currentUid + "/claim").on("value", snap => {
-    if (snap.val() === true) {
-      const bonusRef = db.ref("users/" + currentUid + "/bonusClaimed");
-      bonusRef.transaction(bonusDone => {
-        if (bonusDone) return true; // déjà attribué
-        db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + 15);
-        db.ref("users/" + currentUid + "/logs").push("Bonus de bienvenue : +15µ");
-        return true;
-      });
-    }
-  });
-});
 
 // --- Fonctions utilitaires ---
 function updateUserUI(data) {
