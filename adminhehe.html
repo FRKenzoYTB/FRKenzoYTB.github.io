@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f7f9fc; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background: #003087; color: #fff; }
+    button { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    button.accept { background: #28a745; color: #fff; }
+    button.accept:disabled { background: #ccc; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<h2>Admin Panel - Gestion des utilisateurs</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Balance (µ)</th>
+      <th>Claim</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="usersTable">
+    <!-- utilisateurs ajoutés ici -->
+  </tbody>
+</table>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
+  authDomain: "kylita-f2923.firebaseapp.com",
+  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
+  projectId: "kylita-f2923",
+  storageBucket: "kylita-f2923.appspot.com",
+  messagingSenderId: "431823530994",
+  appId: "1:431823530994:web:88a07e633751686e5ad96b",
+  measurementId: "G-F4LLNWQJ16"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const usersTable = document.getElementById('usersTable');
+
+// Récupérer tous les utilisateurs
+db.ref("users").on("value", snap => {
+  const users = snap.val();
+  usersTable.innerHTML = ""; // vider le tableau
+
+  for (let uid in users) {
+    const user = users[uid];
+    const tr = document.createElement("tr");
+
+    const emailTd = document.createElement("td");
+    emailTd.textContent = user.email || "Non défini";
+
+    const balanceTd = document.createElement("td");
+    balanceTd.textContent = user.balance || 0;
+
+    const claimTd = document.createElement("td");
+    claimTd.textContent = user.claim || "false";
+
+    const actionTd = document.createElement("td");
+    const btn = document.createElement("button");
+
+    if (user.claim === "pending") {
+      btn.textContent = "Accepter";
+      btn.className = "accept";
+      btn.onclick = () => {
+        // ajouter 15 à la balance et passer claim à true
+        db.ref("users/" + uid + "/balance").transaction(b => (b || 0) + 15);
+        db.ref("users/" + uid + "/claim").set(true);
+      };
+    } else {
+      btn.textContent = "-";
+      btn.disabled = true;
+    }
+
+    actionTd.appendChild(btn);
+    tr.appendChild(emailTd);
+    tr.appendChild(balanceTd);
+    tr.appendChild(claimTd);
+    tr.appendChild(actionTd);
+    usersTable.appendChild(tr);
+  }
+});
+</script>
+
+</body>
+</html>
