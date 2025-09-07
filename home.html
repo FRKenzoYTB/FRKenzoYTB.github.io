@@ -286,14 +286,14 @@ let currentUser = null, currentUid = null, balance = 0;
 
 auth.onAuthStateChanged(user => {
   if (!user) {
-    window.location.href = "index.html"; // redirige si non connecté
+    window.location.href = "index.html"; 
     return;
   }
 
   currentUser = user;
   currentUid = user.uid;
 
-  // Récupère les infos utilisateur
+  // Récup infos utilisateur
   db.ref("users/" + currentUid).once("value").then(snapshot => {
     const data = snapshot.val();
     if (!data) {
@@ -319,21 +319,27 @@ auth.onAuthStateChanged(user => {
   const claimBtn = document.getElementById("claimAction");
   const claimText = document.getElementById("claimText");
 
-  // Gestion affichage bouton
   db.ref("users/" + currentUid + "/claim").on("value", snap => {
     const claimStatus = snap.val();
 
     if (claimStatus === true) {
-      claimBtn.style.display = "none"; // bouton disparaît définitivement
+      // Déjà réclamé → bouton grisé et message clair
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
+      claimText.textContent = "Vous avez déjà réclamé.";
+      claimBtn.onclick = null;
     } else if (claimStatus === "pending") {
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
       claimText.textContent = "En attente...";
       claimBtn.onclick = null;
     } else {
-      // false ou inexistant
+      // false ou inexistant → bouton utilisable
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "1";
+      claimBtn.disabled = false;
       claimText.textContent = "Réclamer";
       claimBtn.onclick = () => {
         db.ref("users/" + currentUid + "/claim").set("pending");
@@ -349,7 +355,7 @@ auth.onAuthStateChanged(user => {
         if (bonusDone) return true; // déjà attribué
         db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + 15);
         db.ref("users/" + currentUid + "/logs").push("Bonus de bienvenue : +15µ");
-        return true; // marquer bonus comme attribué
+        return true;
       });
     }
   });
@@ -435,7 +441,6 @@ document.getElementById("saveSettings").onclick = async () => {
   if (newPseudo) updates.username = newPseudo;
   if (newPfp) updates.pfp = newPfp;
 
-  // Si une clé Discord est entrée, on synchronise le solde
   if (discordKey) {
     const usersSnap = await db.ref("discord_users").once("value");
     let matchedUser = null;
