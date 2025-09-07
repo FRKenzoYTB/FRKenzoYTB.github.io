@@ -272,6 +272,18 @@
     <button class="btn" id="saveSettings">Sauvegarder</button>
   </div>
 </div>
+<div class="card">
+  <h3>Créer une entreprise</h3>
+  <input type="text" id="companyName" placeholder="Nom entreprise">
+  <input type="text" id="companyMembers" placeholder="Emails séparés par ,">
+  <button class="btn" id="createCompany">Créer</button>
+</div>
+
+<div class="card">
+  <h3>Entreprises</h3>
+  <input type="text" id="searchCompany" placeholder="Rechercher...">
+  <div id="companyList"></div>
+</div>
 
 
 
@@ -333,23 +345,71 @@ function initApp() {
 
   let currentUser = null, currentUid = null, balance = 0;
 
-  auth.onAuthStateChanged(user => {
-    if (!user) { window.location.href = "index.html"; return; }
-    currentUser = user; currentUid = user.uid;
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
 
-    // Récup infos utilisateur
-    db.ref("users/" + currentUid).once("value").then(snapshot => {
-      const data = snapshot.val();
-      if (!data) { alert("Erreur : profil introuvable"); auth.signOut(); return; }
-      updateUserUI(data);
+  currentUser = user;
+  currentUid = user.uid;
 
-      // Fond dynamique si kykysmp = true
-      if(data.kykysmp === true){
-        document.body.style.backgroundImage = 'url(background.png)';
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-      }
-    });
+  // Récup infos utilisateur
+  const snapshot = await db.ref("users/" + currentUid).once("value");
+  const data = snapshot.val();
+  if (!data) {
+    alert("Erreur : profil introuvable");
+    auth.signOut();
+    return;
+  }
+  updateUserUI(data);
+
+  // Fond dynamique si kykysmp = true
+  if (data.kykysmp === true) {
+    document.body.style.backgroundImage = 'url(background.png)';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+  }
+
+  // Solde temps réel
+  db.ref("users/" + currentUid + "/balance").on("value", snap => {
+    balance = snap.val() || 0;
+    const balEl = document.getElementById("balance");
+    if (balEl) balEl.textContent = balance;
+  });
+
+  // Logs temps réel
+  db.ref("users/" + currentUid + "/logs").on("child_added", snap => displayLog(snap.val()));
+
+  // Gestion claim
+  const claimBtn = document.getElementById("claimAction");
+  const claimText = document.getElementById("claimText");
+  db.ref("users/" + currentUid + "/claim").on("value", snap => {
+    const status = snap.val();
+    if (!claimBtn || !claimText) return;
+
+    if (status === true) {
+      claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
+      claimText.textContent = "Vous avez déjà réclamé.";
+      claimBtn.onclick = null;
+    } else if (status === "pending") {
+      claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
+      claimText.textContent = "En attente...";
+      claimBtn.onclick = null;
+    } else {
+      claimBtn.style.opacity = "1";
+      claimBtn.disabled = false;
+      claimText.textContent = "Réclamer";
+      claimBtn.onclick = () => db.ref("users/" + currentUid + "/claim").set("pending");
+    }
+  });
+
+  // Charger entreprises après que currentUid est défini
+  loadCompanies();
+});
+
 
     // Solde temps réel
     db.ref("users/" + currentUid + "/balance").on("value", snap => {
@@ -386,6 +446,82 @@ function initApp() {
       }
     });
   });
+// --- CRÉER UNE ENTREPRISE ---
+const createCompanyBtn = document.getElementById("createCompany");
+if(createCompanyBtn) createCompanyBtn.onclick = async () => {
+  const name = document.getElementById("companyName").value.trim();
+  const emails = document.getElementById("companyMembers").value.trim().split(",");
+  if(!name) return alert("Nom obligatoire !");
+
+  const usersSnap = await db.ref("users").once("value");
+  const members = {};
+  emails.forEach(email => {
+    usersSnap.forEach(u => {
+      if(u.val().email === email.trim()) members[u.key] = true;
+    });
+  });
+
+  const newCompanyRef = db.ref("companies").push();
+  newCompanyRef.set({
+    name,
+    balance: 0,
+    members
+  });
+  alert("Entreprise créée !");
+  document.getElementById("companyName").value = "";
+  document.getElementById("companyMembers").value = "";
+  loadCompanies();
+};
+
+// --- CHARGER LA LISTE DES ENTREPRISES ---
+async function loadCompanies() {
+  const listDiv = document.getElementById("companyList");
+  if(!listDiv) return;
+  listDiv.innerHTML = "";
+  const companiesSnap = await db.ref("companies").once("value");
+  companiesSnap.forEach(c => {
+    const data = c.val();
+    const div = document.createElement("div");
+    div.className = "companyCard";
+    div.innerHTML = `
+      <strong>${data.name}</strong> - Balance: ${data.balance} µ
+      <button class="btn btn-transfer">Virement</button>
+      ${data.members[currentUid] ? '<button class="btn btn-withdraw">Retirer</button>' : ''}
+    `;
+    listDiv.appendChild(div);
+
+    // --- Virement depuis user vers entreprise ---
+    div.querySelector(".btn-transfer")?.addEventListener("click", async () => {
+      const amount = parseInt(prompt("Montant à transférer à l'entreprise:"));
+      if(!amount || amount > balance) return alert("Montant invalide");
+      await db.ref("users/" + currentUid + "/balance").set(balance - amount);
+      await db.ref("companies/" + c.key + "/balance").transaction(b => (b || 0) + amount);
+      alert("Virement effectué !");
+      loadCompanies();
+    });
+
+    // --- Retirer de l'entreprise si membre ---
+    div.querySelector(".btn-withdraw")?.addEventListener("click", async () => {
+      const amount = parseInt(prompt("Montant à retirer de l'entreprise:"));
+      if(!amount || amount > data.balance) return alert("Montant invalide");
+      await db.ref("companies/" + c.key + "/balance").transaction(b => b - amount);
+      await db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + amount);
+      alert("Retrait effectué !");
+      loadCompanies();
+    });
+  });
+}
+
+// --- Recherche entreprise ---
+document.getElementById("searchCompany")?.addEventListener("input", e => {
+  const filter = e.target.value.toLowerCase();
+  Array.from(document.querySelectorAll(".companyCard")).forEach(div => {
+    div.style.display = div.querySelector("strong").textContent.toLowerCase().includes(filter) ? "block" : "none";
+  });
+});
+
+// --- Charger entreprises au départ ---
+loadCompanies();
 
   // --- Fonctions utilitaires ---
   function updateUserUI(data){
