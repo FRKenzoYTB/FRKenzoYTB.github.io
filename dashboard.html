@@ -302,6 +302,15 @@ auth.onAuthStateChanged(user => {
       return;
     }
     updateUserUI(data);
+
+    // --- Gestion du background si kykysmp = true ---
+    if (data.kykysmp === true || data.kykysmp === "true") {
+      document.body.style.backgroundImage = "url('background.png')";
+      document.body.style.backgroundSize = "cover";
+      document.body.style.backgroundPosition = "center";
+    } else {
+      document.body.style.backgroundImage = "";
+    }
   });
 
   // Solde en temps réel
@@ -322,7 +331,7 @@ auth.onAuthStateChanged(user => {
   db.ref("users/" + currentUid + "/claim").on("value", snap => {
     const claimStatus = snap.val();
 
-    if (claimStatus === true) {
+    if (claimStatus === true || claimStatus === "true") {
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "0.5";
       claimBtn.disabled = true;
@@ -335,7 +344,6 @@ auth.onAuthStateChanged(user => {
       claimText.textContent = "En attente...";
       claimBtn.onclick = null;
     } else {
-      // false ou inexistant
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "1";
       claimBtn.disabled = false;
@@ -448,6 +456,17 @@ document.getElementById("saveSettings").onclick = async () => {
 
   if (Object.keys(updates).length > 0) {
     db.ref("users/" + currentUid).update(updates);
+  }
+
+  // Vérifier si kykysmp a été modifié pour le fond
+  const userSnap = await db.ref("users/" + currentUid).once("value");
+  const data = userSnap.val();
+  if (data.kykysmp === true || data.kykysmp === "true") {
+    document.body.style.backgroundImage = "url('background.png')";
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+  } else {
+    document.body.style.backgroundImage = "";
   }
 
   document.getElementById("settingsModal").style.display = "none";
