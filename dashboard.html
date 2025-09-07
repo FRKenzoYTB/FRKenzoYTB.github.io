@@ -411,41 +411,7 @@ auth.onAuthStateChanged(async user => {
 });
 
 
-    // Solde temps réel
-    db.ref("users/" + currentUid + "/balance").on("value", snap => {
-      balance = snap.val() || 0;
-      const balEl = document.getElementById("balance");
-      if (balEl) balEl.textContent = balance;
-    });
-
-    // Logs temps réel
-    db.ref("users/" + currentUid + "/logs").on("child_added", snap => displayLog(snap.val()));
-
-    // Gestion claim
-    const claimBtn = document.getElementById("claimAction");
-    const claimText = document.getElementById("claimText");
-    db.ref("users/" + currentUid + "/claim").on("value", snap => {
-      const status = snap.val();
-      if (!claimBtn || !claimText) return;
-
-      if (status === true) {
-        claimBtn.style.opacity = "0.5";
-        claimBtn.disabled = true;
-        claimText.textContent = "Vous avez déjà réclamé.";
-        claimBtn.onclick = null;
-      } else if (status === "pending") {
-        claimBtn.style.opacity = "0.5";
-        claimBtn.disabled = true;
-        claimText.textContent = "En attente...";
-        claimBtn.onclick = null;
-      } else {
-        claimBtn.style.opacity = "1";
-        claimBtn.disabled = false;
-        claimText.textContent = "Réclamer";
-        claimBtn.onclick = () => db.ref("users/" + currentUid + "/claim").set("pending");
-      }
-    });
-  });
+  
 // --- CRÉER UNE ENTREPRISE ---
 const createCompanyBtn = document.getElementById("createCompany");
 if(createCompanyBtn) createCompanyBtn.onclick = async () => {
