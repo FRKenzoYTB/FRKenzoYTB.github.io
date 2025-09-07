@@ -180,6 +180,15 @@
   </style>
 </head>
 <body>
+  <div id="loader">
+  <div class="bars">
+    <div class="bar" id="bar1"></div>
+    <div class="bar" id="bar2"></div>
+    <div class="bar" id="bar3"></div>
+    <div class="bar" id="bar4"></div>
+    <div class="bar" id="bar5"></div>
+  </div>
+</div>
   <!-- HEADER -->
 <div class="topbar">
   <div>
@@ -267,192 +276,230 @@
 
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
-  authDomain: "kylita-f2923.firebaseapp.com",
-  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
-  projectId: "kylita-f2923",
-  storageBucket: "kylita-f2923.appspot.com",
-  messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-let currentUser = null, currentUid = null, balance = 0;
-
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "index.html"; 
-    return;
-  }
-
-  currentUser = user;
-  currentUid = user.uid;
-
-  // Récup infos utilisateur
-  db.ref("users/" + currentUid).once("value").then(snapshot => {
-    const data = snapshot.val();
-    if (!data) {
-      alert("Erreur : profil utilisateur introuvable. Veuillez compléter votre profil.");
-      auth.signOut();
-      return;
-    }
-    updateUserUI(data);
-  });
-
-  // Solde en temps réel
-  db.ref("users/" + currentUid + "/balance").on("value", snap => {
-    balance = snap.val() || 0;
-    document.getElementById("balance").textContent = balance;
-  });
-
-  // Logs en temps réel
-  db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
-    displayLog(snap.val());
-  });
-
-  // --- Gestion du bouton Réclamer ---
-  const claimBtn = document.getElementById("claimAction");
-  const claimText = document.getElementById("claimText");
-
-  db.ref("users/" + currentUid + "/claim").on("value", snap => {
-    const claimStatus = snap.val();
-
-    if (claimStatus === true) {
-      claimBtn.style.display = "block";
-      claimBtn.style.opacity = "0.5";
-      claimBtn.disabled = true;
-      claimText.textContent = "Vous avez déjà réclamé.";
-      claimBtn.onclick = null;
-    } else if (claimStatus === "pending") {
-      claimBtn.style.display = "block";
-      claimBtn.style.opacity = "0.5";
-      claimBtn.disabled = true;
-      claimText.textContent = "En attente...";
-      claimBtn.onclick = null;
-    } else {
-      // false ou inexistant
-      claimBtn.style.display = "block";
-      claimBtn.style.opacity = "1";
-      claimBtn.disabled = false;
-      claimText.textContent = "Réclamer";
-      claimBtn.onclick = () => {
-        db.ref("users/" + currentUid + "/claim").set("pending");
-      };
-    }
-  });
-});
-
-// --- Fonctions utilitaires ---
-function updateUserUI(data) {
-  document.getElementById("userPseudo").textContent = data.username || "NON DEFINI";
-  document.getElementById("userEmail").textContent = data.email || currentUser.email;
-  document.getElementById("userPfp").src = data.pfp || "https://via.placeholder.com/45";
-  document.getElementById("copyEmail").value = data.email || currentUser.email;
+// --- Loader 2 secondes ---
+const style = document.createElement('style');
+style.innerHTML = `
+#loader {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background:black; display:flex; justify-content:center; align-items:center;
+  z-index:9999;
 }
+.bars { display:flex; gap:10px; }
+.bar { width:10px; height:40px; background:gray; transform-origin:bottom; }
+.animate { animation: grow 0.5s ease-in-out forwards; }
+@keyframes grow {
+  0% { height:40px; background:gray; }
+  50% { height:80px; background:#0070ba; }
+  100% { height:40px; background:gray; }
+}`;
+document.head.appendChild(style);
 
-function displayLog(msg) {
-  const logsDiv = document.getElementById("logs");
-  const div = document.createElement("div");
-  div.className = "log";
-  div.innerHTML = `<span>${msg}</span>`;
-  logsDiv.prepend(div);
+const loader = document.createElement('div');
+loader.id = 'loader';
+const barsContainer = document.createElement('div');
+barsContainer.className = 'bars';
+for (let i=1;i<=5;i++){
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  bar.id = 'bar'+i;
+  barsContainer.appendChild(bar);
 }
+loader.appendChild(barsContainer);
+document.body.appendChild(loader);
 
-// --- Actions rapides ---
-document.getElementById("envoyerAction").onclick = () => {
-  document.getElementById("donateModal").style.display = "flex";
-};
-document.getElementById("demanderAction").onclick = () => {
-  document.getElementById("requestModal").style.display = "flex";
-};
+const mainContent = document.createElement('div');
+mainContent.id = 'mainContent';
+mainContent.style.display = 'none';
+document.body.appendChild(mainContent);
 
-// --- Fermeture modals ---
-document.getElementById("closeDonate").onclick = () => {
-  document.getElementById("donateModal").style.display = "none";
-};
-document.getElementById("closeRequest").onclick = () => {
-  document.getElementById("requestModal").style.display = "none";
-};
-document.getElementById("closeSettings").onclick = () => {
-  document.getElementById("settingsModal").style.display = "none";
-};
-
-// --- Copier email ---
-document.getElementById("copyBtn").onclick = () => {
-  navigator.clipboard.writeText(document.getElementById("copyEmail").value);
-  alert("Email copié !");
-};
-
-// --- Envoyer de l'argent ---
-document.getElementById("sendMoney").onclick = async () => {
-  const destEmail = document.getElementById("destEmail").value.trim();
-  const amount = parseInt(document.getElementById("amount").value);
-  if (!destEmail || !amount) return alert("Champs obligatoires !");
-  if (amount > balance) return alert("Montant supérieur à votre solde.");
-
-  const usersSnap = await db.ref("users").once("value");
-  let destUid = null;
-  usersSnap.forEach(child => {
-    if (child.val().email === destEmail) destUid = child.key;
+const bars = Array.from(document.querySelectorAll('.bar'));
+function animateBars() {
+  bars.forEach((bar,i)=>{
+    setTimeout(()=>{
+      bar.classList.add('animate');
+      setTimeout(()=>bar.classList.remove('animate'),500);
+    },i*200);
   });
+}
+let interval = setInterval(animateBars,1000);
+animateBars();
 
-  if (!destUid) return alert("Destinataire introuvable.");
+// --- Après 2 secondes loader disparaît ---
+setTimeout(() => {
+  clearInterval(interval);
+  loader.remove();
+  mainContent.style.display = 'block';
+  initApp(); // Lance ton app Firebase
+}, 2000);
 
-  db.ref("users/" + currentUid + "/balance").set(balance - amount);
-  db.ref("users/" + currentUid + "/logs").push(`Vous avez envoyé ${amount}µ à ${destEmail}`);
-  db.ref("users/" + destUid + "/balance").transaction(b => (b || 0) + amount);
-  db.ref("users/" + destUid + "/logs").push(`Vous avez reçu ${amount}µ de ${currentUser.email}`);
 
-  document.getElementById("donateModal").style.display = "none";
-};
+// --- FONCTION INIT APP ---
+function initApp() {
+  const firebaseConfig = {
+    apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
+    authDomain: "kylita-f2923.firebaseapp.com",
+    databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
+    projectId: "kylita-f2923",
+    storageBucket: "kylita-f2923.appspot.com",
+    messagingSenderId: "431823530994",
+    appId: "1:431823530994:web:88a07e633751686e5ad96b",
+    measurementId: "G-F4LLNWQJ16"
+  };
 
-// --- Déconnexion ---
-document.getElementById("logoutBtn").onclick = () => auth.signOut();
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
 
-// --- Paramètres ---
-document.getElementById("settingsBtn").onclick = () => {
-  document.getElementById("settingsModal").style.display = "flex";
-};
-document.getElementById("saveSettings").onclick = async () => {
-  const newPseudo = document.getElementById("newPseudo").value.trim();
-  const newPfp = document.getElementById("newPfp").value.trim();
-  const discordKey = document.getElementById("discordKey").value.trim().toUpperCase();
+  let currentUser = null, currentUid = null, balance = 0;
 
-  let updates = {};
-  if (newPseudo) updates.username = newPseudo;
-  if (newPfp) updates.pfp = newPfp;
+  auth.onAuthStateChanged(user=>{
+    if(!user){ window.location.href="index.html"; return; }
+    currentUser=user; currentUid=user.uid;
 
-  if (discordKey) {
-    const usersSnap = await db.ref("discord_users").once("value");
-    let matchedUser = null;
-    usersSnap.forEach(child => {
-      if (child.val().link_key === discordKey) {
-        matchedUser = { uid: child.key, data: child.val() };
+    // Récup infos utilisateur
+    db.ref("users/"+currentUid).once("value").then(snapshot=>{
+      const data=snapshot.val();
+      if(!data){ alert("Erreur : profil introuvable"); auth.signOut(); return; }
+      updateUserUI(data);
+
+      // --- Fond dynamique si kykysmp = true
+      if(data.kykysmp===true){
+        document.body.style.backgroundImage='url(background.png)';
+        document.body.style.backgroundSize='cover';
+        document.body.style.backgroundPosition='center';
       }
     });
 
-    if (!matchedUser) {
-      return alert("Clé Discord invalide.");
+    // Solde temps réel
+    db.ref("users/"+currentUid+"/balance").on("value",snap=>{
+      balance = snap.val() || 0;
+      const balEl=document.getElementById("balance");
+      if(balEl) balEl.textContent=balance;
+    });
+
+    // Logs temps réel
+    db.ref("users/"+currentUid+"/logs").on("child_added",snap=>displayLog(snap.val()));
+
+    // Gestion claim
+    const claimBtn = document.getElementById("claimAction");
+    const claimText = document.getElementById("claimText");
+    db.ref("users/"+currentUid+"/claim").on("value",snap=>{
+      const status=snap.val();
+      if(!claimBtn || !claimText) return;
+
+      if(status===true){
+        claimBtn.style.display="block";
+        claimBtn.style.opacity="0.5";
+        claimBtn.disabled=true;
+        claimText.textContent="Vous avez déjà réclamé.";
+        claimBtn.onclick=null;
+      } else if(status==="pending"){
+        claimBtn.style.display="block";
+        claimBtn.style.opacity="0.5";
+        claimBtn.disabled=true;
+        claimText.textContent="En attente...";
+        claimBtn.onclick=null;
+      } else {
+        claimBtn.style.display="block";
+        claimBtn.style.opacity="1";
+        claimBtn.disabled=false;
+        claimText.textContent="Réclamer";
+        claimBtn.onclick=()=>db.ref("users/"+currentUid+"/claim").set("pending");
+      }
+    });
+  });
+
+  // --- Fonctions utilitaires ---
+  function updateUserUI(data){
+    const pseudoEl=document.getElementById("userPseudo");
+    const emailEl=document.getElementById("userEmail");
+    const pfpEl=document.getElementById("userPfp");
+    const copyEmailEl=document.getElementById("copyEmail");
+
+    if(pseudoEl) pseudoEl.textContent=data.username||"NON DEFINI";
+    if(emailEl) emailEl.textContent=data.email||currentUser.email;
+    if(pfpEl) pfpEl.src=data.pfp||"https://via.placeholder.com/45";
+    if(copyEmailEl) copyEmailEl.value=data.email||currentUser.email;
+  }
+
+  function displayLog(msg){
+    const logsDiv=document.getElementById("logs");
+    if(!logsDiv) return;
+    const div=document.createElement("div");
+    div.className="log";
+    div.innerHTML=`<span>${msg}</span>`;
+    logsDiv.prepend(div);
+  }
+
+  // Actions rapides
+  const envoyer=document.getElementById("envoyerAction");
+  const demander=document.getElementById("demanderAction");
+  if(envoyer) envoyer.onclick=()=>document.getElementById("donateModal").style.display="flex";
+  if(demander) demander.onclick=()=>document.getElementById("requestModal").style.display="flex";
+
+  // Fermeture modals
+  const closeDonate=document.getElementById("closeDonate");
+  const closeRequest=document.getElementById("closeRequest");
+  const closeSettings=document.getElementById("closeSettings");
+  if(closeDonate) closeDonate.onclick=()=>document.getElementById("donateModal").style.display="none";
+  if(closeRequest) closeRequest.onclick=()=>document.getElementById("requestModal").style.display="none";
+  if(closeSettings) closeSettings.onclick=()=>document.getElementById("settingsModal").style.display="none";
+
+  // Copier email
+  const copyBtn=document.getElementById("copyBtn");
+  if(copyBtn) copyBtn.onclick=()=>{ navigator.clipboard.writeText(document.getElementById("copyEmail").value); alert("Email copié !"); }
+
+  // Envoyer argent
+  const sendMoney=document.getElementById("sendMoney");
+  if(sendMoney) sendMoney.onclick=async()=>{
+    const destEmail=document.getElementById("destEmail").value.trim();
+    const amount=parseInt(document.getElementById("amount").value);
+    if(!destEmail||!amount) return alert("Champs obligatoires !");
+    if(amount>balance) return alert("Montant supérieur à votre solde.");
+
+    const usersSnap=await db.ref("users").once("value");
+    let destUid=null;
+    usersSnap.forEach(child=>{ if(child.val().email===destEmail) destUid=child.key; });
+    if(!destUid) return alert("Destinataire introuvable.");
+
+    db.ref("users/"+currentUid+"/balance").set(balance-amount);
+    db.ref("users/"+currentUid+"/logs").push(`Vous avez envoyé ${amount}µ à ${destEmail}`);
+    db.ref("users/"+destUid+"/balance").transaction(b=>(b||0)+amount);
+    db.ref("users/"+destUid+"/logs").push(`Vous avez reçu ${amount}µ de ${currentUser.email}`);
+    document.getElementById("donateModal").style.display="none";
+  };
+
+  // Déconnexion
+  const logoutBtn=document.getElementById("logoutBtn");
+  if(logoutBtn) logoutBtn.onclick=()=>auth.signOut();
+
+  // Paramètres
+  const settingsBtn=document.getElementById("settingsBtn");
+  const saveSettings=document.getElementById("saveSettings");
+  if(settingsBtn) settingsBtn.onclick=()=>document.getElementById("settingsModal").style.display="flex";
+  if(saveSettings) saveSettings.onclick=async()=>{
+    const newPseudo=document.getElementById("newPseudo").value.trim();
+    const newPfp=document.getElementById("newPfp").value.trim();
+    const discordKey=document.getElementById("discordKey").value.trim().toUpperCase();
+    let updates={};
+    if(newPseudo) updates.username=newPseudo;
+    if(newPfp) updates.pfp=newPfp;
+
+    if(discordKey){
+      const usersSnap=await db.ref("discord_users").once("value");
+      let matchedUser=null;
+      usersSnap.forEach(child=>{ if(child.val().link_key===discordKey) matchedUser={uid:child.key,data:child.val()}; });
+      if(!matchedUser) return alert("Clé Discord invalide.");
+      balance=matchedUser.data.balance||0;
+      const balEl=document.getElementById("balance"); if(balEl) balEl.textContent=balance;
+      updates.discord_key=discordKey;
     }
 
-    balance = matchedUser.data.balance || 0;
-    document.getElementById("balance").textContent = balance;
-
-    updates.discord_key = discordKey;
-  }
-
-  if (Object.keys(updates).length > 0) {
-    db.ref("users/" + currentUid).update(updates);
-  }
-
-  document.getElementById("settingsModal").style.display = "none";
-  alert("Paramètres mis à jour !");
-};
+    if(Object.keys(updates).length>0) db.ref("users/"+currentUid).update(updates);
+    document.getElementById("settingsModal").style.display="none";
+    alert("Paramètres mis à jour !");
+  };
+}
 
 
 </script>
