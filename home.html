@@ -316,43 +316,44 @@ auth.onAuthStateChanged(user => {
   });
 
   // --- Gestion du bouton Réclamer ---
-  const claimBtn = document.getElementById("claimAction");
-  const claimText = document.getElementById("claimText");
+const claimBtn = document.getElementById("claimAction");
+const claimText = document.getElementById("claimText");
 
-  db.ref("users/" + currentUid + "/claim").on("value", snap => {
-    const claimStatus = snap.val();
+// Gérer uniquement l'affichage du bouton
+db.ref("users/" + currentUid + "/claim").on("value", snap => {
+  const claimStatus = snap.val();
 
-    if (claimStatus === true) {
-      claimBtn.style.display = "none"; // bouton caché
-    } else if (claimStatus === "pending") {
-      claimBtn.style.display = "block";
-      claimBtn.style.opacity = "0.5";
-      claimText.textContent = "En attente...";
-      claimBtn.onclick = null;
-    } else {
-      // false ou inexistant
-      claimBtn.style.display = "block";
-      claimBtn.style.opacity = "1";
-      claimText.textContent = "Réclamer";
-      claimBtn.onclick = () => {
-        db.ref("users/" + currentUid + "/claim").set("pending");
-      };
-    }
-  });
-
-  // Ajouter +15 µ une seule fois quand claim passe à true
-  db.ref("users/" + currentUid + "/claim").on("value", snap => {
-    if (snap.val() === true) {
-      const bonusRef = db.ref("users/" + currentUid + "/bonusClaimed");
-      bonusRef.transaction(bonusDone => {
-        if (bonusDone) return true; // déjà attribué
-        db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + 15);
-        db.ref("users/" + currentUid + "/logs").push("Bonus de bienvenue : +15µ");
-        return true; // marquer comme attribué
-      });
-    }
-  });
+  if (claimStatus === true) {
+    claimBtn.style.display = "none"; // bouton disparaît définitivement
+  } else if (claimStatus === "pending") {
+    claimBtn.style.display = "block";
+    claimBtn.style.opacity = "0.5";
+    claimText.textContent = "En attente...";
+    claimBtn.onclick = null;
+  } else {
+    // false ou inexistant
+    claimBtn.style.display = "block";
+    claimBtn.style.opacity = "1";
+    claimText.textContent = "Réclamer";
+    claimBtn.onclick = () => {
+      db.ref("users/" + currentUid + "/claim").set("pending");
+    };
+  }
 });
+
+// Ajouter +15 µ une seule fois quand claim devient true
+db.ref("users/" + currentUid + "/claim").on("value", snap => {
+  if (snap.val() === true) {
+    const bonusRef = db.ref("users/" + currentUid + "/bonusClaimed");
+    bonusRef.transaction(bonusDone => {
+      if (bonusDone) return true; // déjà attribué
+      db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + 15);
+      db.ref("users/" + currentUid + "/logs").push("Bonus de bienvenue : +15µ");
+      return true; // marquer bonus comme attribué
+    });
+  }
+});
+
 
 // --- Fonctions utilitaires ---
 function updateUserUI(data){
