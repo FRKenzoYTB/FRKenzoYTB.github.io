@@ -168,6 +168,15 @@
       color: #888;
     }
     .close:hover { color: #333; }
+    #claimAction {
+  background: #ffcc00;
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+  from { background: #ffcc00; }
+  to   { background: #ff8800; }
+}
+
   </style>
 </head>
 <body>
@@ -196,10 +205,11 @@
       </div>
 
       <div class="card">
-        <h3>Actions rapides</h3>
+        <h3>Actions</h3>
         <div class="actions">
           <div class="action" id="envoyerAction"><h4>Envoyer</h4></div>
           <div class="action" id="demanderAction"><h4>Demander</h4></div>
+          <div class="action" id="claimAction"><h4 id="claimText">Réclamer</h4></div>
         </div>
       </div>
 
@@ -276,14 +286,14 @@ let currentUser = null, currentUid = null, balance = 0;
 
 auth.onAuthStateChanged(user => {
   if (!user) {
-    window.location.href = "index.html"; // redirige si non connecté
+    window.location.href = "index.html"; 
     return;
   }
 
   currentUser = user;
   currentUid = user.uid;
 
-  // Récupère les infos utilisateur
+  // Récup infos utilisateur
   db.ref("users/" + currentUid).once("value").then(snapshot => {
     const data = snapshot.val();
     if (!data) {
@@ -304,10 +314,41 @@ auth.onAuthStateChanged(user => {
   db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
     displayLog(snap.val());
   });
+
+  // --- Gestion du bouton Réclamer ---
+  const claimBtn = document.getElementById("claimAction");
+  const claimText = document.getElementById("claimText");
+
+  db.ref("users/" + currentUid + "/claim").on("value", snap => {
+    const claimStatus = snap.val();
+
+    if (claimStatus === true) {
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
+      claimText.textContent = "Vous avez déjà réclamé.";
+      claimBtn.onclick = null;
+    } else if (claimStatus === "pending") {
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "0.5";
+      claimBtn.disabled = true;
+      claimText.textContent = "En attente...";
+      claimBtn.onclick = null;
+    } else {
+      // false ou inexistant
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "1";
+      claimBtn.disabled = false;
+      claimText.textContent = "Réclamer";
+      claimBtn.onclick = () => {
+        db.ref("users/" + currentUid + "/claim").set("pending");
+      };
+    }
+  });
 });
 
 // --- Fonctions utilitaires ---
-function updateUserUI(data){
+function updateUserUI(data) {
   document.getElementById("userPseudo").textContent = data.username || "NON DEFINI";
   document.getElementById("userEmail").textContent = data.email || currentUser.email;
   document.getElementById("userPfp").src = data.pfp || "https://via.placeholder.com/45";
@@ -323,13 +364,23 @@ function displayLog(msg) {
 }
 
 // --- Actions rapides ---
-document.getElementById("envoyerAction").onclick = () => document.getElementById("donateModal").style.display = "flex";
-document.getElementById("demanderAction").onclick = () => document.getElementById("requestModal").style.display = "flex";
+document.getElementById("envoyerAction").onclick = () => {
+  document.getElementById("donateModal").style.display = "flex";
+};
+document.getElementById("demanderAction").onclick = () => {
+  document.getElementById("requestModal").style.display = "flex";
+};
 
 // --- Fermeture modals ---
-document.getElementById("closeDonate").onclick = () => document.getElementById("donateModal").style.display = "none";
-document.getElementById("closeRequest").onclick = () => document.getElementById("requestModal").style.display = "none";
-document.getElementById("closeSettings").onclick = () => document.getElementById("settingsModal").style.display = "none";
+document.getElementById("closeDonate").onclick = () => {
+  document.getElementById("donateModal").style.display = "none";
+};
+document.getElementById("closeRequest").onclick = () => {
+  document.getElementById("requestModal").style.display = "none";
+};
+document.getElementById("closeSettings").onclick = () => {
+  document.getElementById("settingsModal").style.display = "none";
+};
 
 // --- Copier email ---
 document.getElementById("copyBtn").onclick = () => {
@@ -364,7 +415,9 @@ document.getElementById("sendMoney").onclick = async () => {
 document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
 // --- Paramètres ---
-document.getElementById("settingsBtn").onclick = () => document.getElementById("settingsModal").style.display = "flex";
+document.getElementById("settingsBtn").onclick = () => {
+  document.getElementById("settingsModal").style.display = "flex";
+};
 document.getElementById("saveSettings").onclick = async () => {
   const newPseudo = document.getElementById("newPseudo").value.trim();
   const newPfp = document.getElementById("newPfp").value.trim();
@@ -374,23 +427,22 @@ document.getElementById("saveSettings").onclick = async () => {
   if (newPseudo) updates.username = newPseudo;
   if (newPfp) updates.pfp = newPfp;
 
-  // Si une clé Discord est entrée, on synchronise le solde
   if (discordKey) {
-    const usersSnap = await db.ref("discord_users").once("value"); // collection Discord
+    const usersSnap = await db.ref("discord_users").once("value");
     let matchedUser = null;
     usersSnap.forEach(child => {
-      if (child.val().link_key === discordKey) matchedUser = { uid: child.key, data: child.val() };
+      if (child.val().link_key === discordKey) {
+        matchedUser = { uid: child.key, data: child.val() };
+      }
     });
 
     if (!matchedUser) {
       return alert("Clé Discord invalide.");
     }
 
-    // Synchroniser le solde
     balance = matchedUser.data.balance || 0;
     document.getElementById("balance").textContent = balance;
 
-    // Optionnel : enregistrer la clé sur notre compte pour rappel
     updates.discord_key = discordKey;
   }
 
@@ -402,7 +454,9 @@ document.getElementById("saveSettings").onclick = async () => {
   alert("Paramètres mis à jour !");
 };
 
+
 </script>
+
 
 </body>
 </html>
