@@ -323,7 +323,6 @@ auth.onAuthStateChanged(user => {
     const claimStatus = snap.val();
 
     if (claimStatus === true) {
-      // Déjà réclamé → bouton grisé et message clair
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "0.5";
       claimBtn.disabled = true;
@@ -336,7 +335,7 @@ auth.onAuthStateChanged(user => {
       claimText.textContent = "En attente...";
       claimBtn.onclick = null;
     } else {
-      // false ou inexistant → bouton utilisable
+      // false ou inexistant
       claimBtn.style.display = "block";
       claimBtn.style.opacity = "1";
       claimBtn.disabled = false;
@@ -346,7 +345,7 @@ auth.onAuthStateChanged(user => {
       };
     }
   });
-
+});
 
 // --- Fonctions utilitaires ---
 function updateUserUI(data) {
