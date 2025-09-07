@@ -168,6 +168,15 @@
       color: #888;
     }
     .close:hover { color: #333; }
+    #claimAction {
+  background: #ffcc00;
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+  from { background: #ffcc00; }
+  to   { background: #ff8800; }
+}
+
   </style>
 </head>
 <body>
@@ -196,10 +205,11 @@
       </div>
 
       <div class="card">
-        <h3>Actions rapides</h3>
+        <h3>Actions</h3>
         <div class="actions">
           <div class="action" id="envoyerAction"><h4>Envoyer</h4></div>
           <div class="action" id="demanderAction"><h4>Demander</h4></div>
+          <div class="action" id="claimAction"><h4 id="claimText">Réclamer</h4></div>
         </div>
       </div>
 
@@ -304,6 +314,44 @@ auth.onAuthStateChanged(user => {
   db.ref("users/" + currentUid + "/logs").on("child_added", snap => {
     displayLog(snap.val());
   });
+
+  // --- Gestion du bouton Réclamer ---
+  const claimBtn = document.getElementById("claimAction");
+  const claimText = document.getElementById("claimText");
+
+  db.ref("users/" + currentUid + "/claim").on("value", snap => {
+    const claimStatus = snap.val();
+
+    if (claimStatus === true) {
+      claimBtn.style.display = "none"; // bouton caché
+    } else if (claimStatus === "pending") {
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "0.5";
+      claimText.textContent = "En attente...";
+      claimBtn.onclick = null;
+    } else {
+      // false ou inexistant
+      claimBtn.style.display = "block";
+      claimBtn.style.opacity = "1";
+      claimText.textContent = "Réclamer";
+      claimBtn.onclick = () => {
+        db.ref("users/" + currentUid + "/claim").set("pending");
+      };
+    }
+  });
+
+  // Ajouter +15 µ une seule fois quand claim passe à true
+  db.ref("users/" + currentUid + "/claim").on("value", snap => {
+    if (snap.val() === true) {
+      const bonusRef = db.ref("users/" + currentUid + "/bonusClaimed");
+      bonusRef.transaction(bonusDone => {
+        if (bonusDone) return true; // déjà attribué
+        db.ref("users/" + currentUid + "/balance").transaction(b => (b || 0) + 15);
+        db.ref("users/" + currentUid + "/logs").push("Bonus de bienvenue : +15µ");
+        return true; // marquer comme attribué
+      });
+    }
+  });
 });
 
 // --- Fonctions utilitaires ---
@@ -376,7 +424,7 @@ document.getElementById("saveSettings").onclick = async () => {
 
   // Si une clé Discord est entrée, on synchronise le solde
   if (discordKey) {
-    const usersSnap = await db.ref("discord_users").once("value"); // collection Discord
+    const usersSnap = await db.ref("discord_users").once("value");
     let matchedUser = null;
     usersSnap.forEach(child => {
       if (child.val().link_key === discordKey) matchedUser = { uid: child.key, data: child.val() };
@@ -386,11 +434,9 @@ document.getElementById("saveSettings").onclick = async () => {
       return alert("Clé Discord invalide.");
     }
 
-    // Synchroniser le solde
     balance = matchedUser.data.balance || 0;
     document.getElementById("balance").textContent = balance;
 
-    // Optionnel : enregistrer la clé sur notre compte pour rappel
     updates.discord_key = discordKey;
   }
 
@@ -401,8 +447,8 @@ document.getElementById("saveSettings").onclick = async () => {
   document.getElementById("settingsModal").style.display = "none";
   alert("Paramètres mis à jour !");
 };
-
 </script>
+
 
 </body>
 </html>
