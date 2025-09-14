@@ -55,6 +55,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // Configuration Firebase
         const firebaseConfig = {
             apiKey: "TON_API_KEY",
             authDomain: "TON_PROJET.firebaseapp.com",
@@ -97,7 +98,7 @@
             alertRef.on('value', snapshot => {
                 const soundFile = snapshot.val();
                 if (soundFile) {
-                    const audio = new Audio(soundFile); // Assurez-vous que les mp3 sont accessibles
+                    const audio = new Audio(soundFile); // Le son doit être accessible via le site
                     audio.play();
                     soundCell.textContent = soundFile;
                     statusDiv.textContent = `ALERTE ! Son: ${soundFile}`;
