@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>GPWS Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 60%;
+        }
+        th, td {
+            border: 1px solid #fff;
+            padding: 8px;
+        }
+        th {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>GPWS Interface</h1>
+    <input type="text" id="pseudo" placeholder="Entrez votre pseudo">
+    <button id="connect">Se connecter</button>
+    <div id="status">Statut : Déconnecté</div>
+
+    <table id="playersTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Pseudo</th>
+                <th>Dernier son</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "TON_API_KEY",
+            authDomain: "TON_PROJET.firebaseapp.com",
+            databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
+            projectId: "TON_PROJET",
+            storageBucket: "TON_PROJET.appspot.com",
+            messagingSenderId: "TON_ID",
+            appId: "TON_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const pseudoInput = document.getElementById('pseudo');
+        const connectBtn = document.getElementById('connect');
+        const statusDiv = document.getElementById('status');
+        const table = document.getElementById('playersTable');
+        const tbody = table.querySelector('tbody');
+
+        let pseudo = null;
+        let alertRef = null;
+
+        connectBtn.addEventListener('click', () => {
+            pseudo = pseudoInput.value.trim();
+            if (!pseudo) return alert("Veuillez entrer un pseudo !");
+            statusDiv.textContent = `Statut : Connecté en tant que ${pseudo}`;
+            table.style.display = "table";
+
+            // Ajouter le joueur au tableau
+            const row = document.createElement('tr');
+            const nameCell = document.createElement('td');
+            nameCell.textContent = pseudo;
+            const soundCell = document.createElement('td');
+            soundCell.textContent = "-";
+            row.appendChild(nameCell);
+            row.appendChild(soundCell);
+            tbody.appendChild(row);
+
+            // Écoute Firebase pour ce joueur
+            alertRef = db.ref(pseudo + '/sound');
+            alertRef.on('value', snapshot => {
+                const soundFile = snapshot.val();
+                if (soundFile) {
+                    const audio = new Audio(soundFile); // Assurez-vous que les mp3 sont accessibles
+                    audio.play();
+                    soundCell.textContent = soundFile;
+                    statusDiv.textContent = `ALERTE ! Son: ${soundFile}`;
+                } else {
+                    soundCell.textContent = "-";
+                    statusDiv.textContent = `Statut : Aucun obstacle pour ${pseudo}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
